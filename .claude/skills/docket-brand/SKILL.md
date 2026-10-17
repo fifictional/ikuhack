@@ -14,16 +14,16 @@ Tokens live in `src/app/globals.css`. **Never hardcode hex values or use Tailwin
 |---|---|---|
 | `primary` | `#1A1A1A` | Primary buttons, links, active states, focus ring |
 | `primary-dark` | `#000000` | Hover/pressed on primary |
-| `primary-tint` | `#EDEDEA` | Subtle highlight backgrounds (key cards, hover on outline buttons) |
+| `primary-tint` | `#EDEDED` | Subtle highlight backgrounds (key cards, hover on outline buttons) |
 | `highlight` | `#4A4A4A` | Secondary emphasis fills: "speaking" / "recording" states, small markers |
 | `highlight-dark` | `#333333` | Text on `highlight-tint` |
-| `highlight-tint` | `#E8E8E5` | Recording / active-state backgrounds |
+| `highlight-tint` | `#E8E8E8` | Recording / active-state backgrounds |
 | `ink` | `#1A1A1A` | All body text and headings (`text-foreground` = ink) |
 | `muted` | `#6B6B6B` | Secondary text |
-| `panel` | `#EFEFEC` | Grouped areas (transcript box, demo blocks) |
-| `background` | `#F7F7F5` | Page background and header |
+| `panel` | `#EFEFEF` | Grouped areas (transcript box, demo blocks) |
+| `background` | `#F7F7F7` | Page background and header |
 | white | `#FFFFFF` | Cards and panels (`bg-surface`) |
-| `border` | `#E4E4E0` | Hairlines and card borders |
+| `border` | `#E4E4E4` | Hairlines and card borders |
 
 **The only colour is status, on deadlines and verdicts:** `warn` amber `#9A5B00` (due within 24h), `danger` red `#C62828` (legal deadline missed, errors), `ok` green `#1B7F3B` (met). Don't use them decoratively.
 

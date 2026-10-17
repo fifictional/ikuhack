@@ -6,14 +6,17 @@ import { useEffect, useRef, useState } from "react";
 
 /** Hard stop for a single call, as a backstop to the agent's max-duration setting (credits are billed per minute). */
 const MAX_CALL_MS = 3 * 60_000;
+/** While paused, ping activity so the agent's 20s silence hang-up doesn't end the call. */
+const KEEPALIVE_MS = 8_000;
 
-type Line = { role: "tenant" | "docket"; text: string };
+/** `heard` is what speech-to-text produced; kept when the tenant corrects it, so the record shows both. */
+type Line = { role: "tenant" | "docket"; text: string; heard?: string };
 
 /**
  * Multilingual voice intake via the ElevenLabs agent (configured by `npm run voice:setup`).
  * The agent's tools are client tools: they run here in the browser against our own API,
- * so voice works on localhost with no public URL. When the call ends, the transcript is
- * saved on the case as evidence, making the call part of the tamper-evident record.
+ * so voice works on localhost with no public URL. The tenant can pause the call and correct
+ * any caption; when the call ends the transcript (with corrections) is saved on the case.
  */
 export function VoiceReport({ onFallback }: { onFallback?: () => void }) {
   return (
@@ -23,36 +26,55 @@ export function VoiceReport({ onFallback }: { onFallback?: () => void }) {
   );
 }
 
+function transcriptText(lines: Line[]) {
+  return lines
+    .map((l) =>
+      l.role === "docket"
+        ? `Docket: ${l.text}`
+        : l.heard
+          ? `Tenant (corrected by tenant): ${l.text}\n  [speech-to-text heard: "${l.heard}"]`
+          : `Tenant: ${l.text}`,
+    )
+    .join("\n");
+}
+
 function VoiceInner({ onFallback }: { onFallback?: () => void }) {
   const [caseId, setCaseId] = useState<string | null>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<"no" | "saved" | "stale">("no");
+  const [paused, setPaused] = useState(false);
+  const [editing, setEditing] = useState<{ index: number; text: string } | null>(null);
   // Refs so the disconnect handler always sees the latest call state.
   const caseRef = useRef<string | null>(null);
   const linesRef = useRef<Line[]>([]);
+  const keepalive = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  async function saveTranscript() {
+  const setAllLines = (next: Line[]) => {
+    linesRef.current = next;
+    setLines(next);
+  };
+
+  async function saveTranscript(caption = "Voice report transcript") {
     const id = caseRef.current;
     if (!id || linesRef.current.length === 0) return;
-    const text = linesRef.current.map((l) => `${l.role === "tenant" ? "Tenant" : "Docket"}: ${l.text}`).join("\n");
     const form = new FormData();
-    form.set("file", new File([text], "voice-report-transcript.txt", { type: "text/plain" }));
+    form.set("file", new File([transcriptText(linesRef.current)], "voice-report-transcript.txt", { type: "text/plain" }));
     form.set("actor", "tenant");
     form.set("kind", "transcript");
-    form.set("caption", "Voice report transcript");
+    form.set("caption", caption);
     const res = await fetch(`/api/cases/${id}/evidence`, { method: "POST", body: form });
-    if (res.ok) setSaved(true);
+    if (res.ok) setSaved("saved");
   }
 
   const conversation = useConversation({
     onError: (message: string) => setError(message),
-    onMessage: ({ message, source }) => {
-      const line: Line = { role: source === "user" ? "tenant" : "docket", text: message };
-      linesRef.current = [...linesRef.current, line];
-      setLines(linesRef.current);
+    onMessage: ({ message, source }) => setAllLines([...linesRef.current, { role: source === "user" ? "tenant" : "docket", text: message }]),
+    onDisconnect: () => {
+      stopKeepalive();
+      setPaused(false);
+      void saveTranscript();
     },
-    onDisconnect: () => void saveTranscript(),
     clientTools: {
       report_issue: async (params: { description: string; original_language?: string; vulnerable_occupant?: boolean }) => {
         const res = await fetch("/api/voice/report", {
@@ -89,18 +111,55 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
     return () => clearTimeout(t);
   }, [live, endSession]);
 
+  useEffect(() => () => stopKeepalive(), []);
+
+  function stopKeepalive() {
+    if (keepalive.current) clearInterval(keepalive.current);
+    keepalive.current = null;
+  }
+
+  function togglePause() {
+    if (!paused) {
+      conversation.setMuted(true);
+      conversation.sendContextualUpdate("The tenant has paused the call. Stay completely silent until they say they're back.");
+      keepalive.current = setInterval(() => conversation.sendUserActivity(), KEEPALIVE_MS);
+      setPaused(true);
+    } else {
+      stopKeepalive();
+      conversation.setMuted(false);
+      conversation.sendContextualUpdate("The tenant has resumed the call. Briefly invite them to carry on.");
+      setPaused(false);
+    }
+  }
+
+  /** Replace a misheard caption; keep the original for the record and tell the agent what was meant. */
+  function saveEdit() {
+    if (!editing) return;
+    const old = linesRef.current[editing.index];
+    const text = editing.text.trim();
+    setEditing(null);
+    if (!old || !text || text === old.text) return;
+    const next = [...linesRef.current];
+    next[editing.index] = { ...old, text, heard: old.heard ?? old.text };
+    setAllLines(next);
+    if (live) {
+      conversation.sendUserMessage(`Correction: you heard "${old.text}" but I meant: "${text}".`);
+    } else if (saved === "saved") {
+      setSaved("stale");
+    }
+  }
+
   async function start() {
     setError(null);
-    setSaved(false);
+    setSaved("no");
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       const res = await fetch("/api/voice/signed-url");
       const { signedUrl, error } = await res.json();
       if (!res.ok) throw new Error(error);
       caseRef.current = null;
-      linesRef.current = [];
+      setAllLines([]);
       setCaseId(null);
-      setLines([]);
       conversation.startSession({ signedUrl });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -115,32 +174,81 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
           disabled={connecting}
           aria-label={live ? "End call" : "Start talking to Docket"}
           className={`mx-auto flex h-28 w-28 items-center justify-center rounded-full font-semibold text-white transition disabled:opacity-60 ${
-            live ? (conversation.isSpeaking ? "scale-105 bg-terracotta" : "bg-teal") : "bg-teal hover:bg-teal-dark"
+            live && !paused && conversation.isSpeaking ? "scale-105 bg-terracotta" : "bg-teal hover:bg-teal-dark"
           }`}
         >
           {live ? "End" : connecting ? "Connecting…" : "Tap to talk"}
         </button>
         <p className="mt-3 text-sm text-muted" aria-live="polite">
-          {live ? (conversation.isSpeaking ? "Docket is speaking…" : "Listening…") : "Speak in any language. Tell us what's wrong and where."}
+          {!live
+            ? "Speak in any language. Tell us what's wrong and where."
+            : paused
+              ? "Paused: your microphone is off. Tap Resume when you're ready."
+              : conversation.isSpeaking
+                ? "Docket is speaking…"
+                : "Listening…"}
         </p>
+        {live && (
+          <button
+            onClick={togglePause}
+            className={`mt-3 rounded-lg border px-4 py-2 text-sm font-medium ${
+              paused ? "border-teal bg-teal text-white hover:bg-teal-dark" : "border-teal text-teal hover:bg-teal-tint"
+            }`}
+          >
+            {paused ? "Resume" : "Pause"}
+          </button>
+        )}
       </div>
 
       {lines.length > 0 && (
-        <ol className="max-h-64 space-y-2 overflow-y-auto rounded-lg bg-cream-soft p-3 text-sm" aria-label="Live transcript">
-          {lines.map((l, i) => (
-            <li key={i} className={l.role === "tenant" ? "text-right" : ""}>
-              <span className={`inline-block rounded-lg px-3 py-1.5 ${l.role === "tenant" ? "bg-teal text-white" : "bg-surface text-ink"}`}>
-                {l.text}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <div className="space-y-1">
+          <p className="text-xs text-muted">Tap anything you said to fix it if we heard it wrong.</p>
+          <ol className="max-h-72 space-y-2 overflow-y-auto rounded-lg bg-cream-soft p-3 text-sm" aria-label="Transcript">
+            {lines.map((l, i) =>
+              editing?.index === i ? (
+                <li key={i} className="space-y-2 text-right">
+                  <textarea
+                    autoFocus
+                    value={editing.text}
+                    onChange={(e) => setEditing({ index: i, text: e.target.value })}
+                    rows={2}
+                    className="w-full rounded-lg border border-teal bg-surface p-2 text-left"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setEditing(null)} className="rounded-md border border-border px-3 py-1 text-xs">Cancel</button>
+                    <button onClick={saveEdit} className="rounded-md bg-teal px-3 py-1 text-xs font-semibold text-white hover:bg-teal-dark">Save correction</button>
+                  </div>
+                </li>
+              ) : (
+                <li key={i} className={l.role === "tenant" ? "text-right" : ""}>
+                  {l.role === "tenant" ? (
+                    <button
+                      onClick={() => setEditing({ index: i, text: l.text })}
+                      title="Edit what you said"
+                      className="inline-block rounded-lg bg-teal px-3 py-1.5 text-left text-white hover:bg-teal-dark"
+                    >
+                      {l.text}
+                      <span className="ml-2 text-xs text-white/80 underline">{l.heard ? "edited" : "edit"}</span>
+                    </button>
+                  ) : (
+                    <span className="inline-block rounded-lg bg-surface px-3 py-1.5 text-ink">{l.text}</span>
+                  )}
+                </li>
+              ),
+            )}
+          </ol>
+        </div>
       )}
 
       {caseId && (
-        <div className="rounded-lg border-2 border-teal bg-teal-tint p-3 text-center text-sm">
-          <p className="font-medium">Your repair is logged{saved ? " and the call transcript is saved as evidence" : ""}.</p>
-          <Link href={`/tenant/cases/${caseId}`} className="font-medium text-teal underline">See your landlord&apos;s deadline</Link>
+        <div className="space-y-1 rounded-lg border-2 border-teal bg-teal-tint p-3 text-center text-sm">
+          <p className="font-medium">Your repair is logged{saved === "saved" ? " and the call transcript is saved as evidence" : ""}.</p>
+          {saved === "stale" && (
+            <button onClick={() => saveTranscript("Voice report transcript (corrected by tenant)")} className="font-medium text-teal underline">
+              Save my corrections to the case
+            </button>
+          )}
+          <Link href={`/tenant/cases/${caseId}`} className="block font-medium text-teal underline">See your landlord&apos;s deadline</Link>
         </div>
       )}
 

@@ -56,7 +56,7 @@ Status roles: `ok` = teal, `warn` = terracotta-dark, `danger` = `#A61B1B` (deadl
 - **Links:** `font-medium text-teal underline`
 
 ## Tone
-Calm, plain English, never alarmist. Legal deadlines are labelled "legal deadline". Docket targets are labelled "Docket target (not a legal deadline)". Copy reads to tenants as "Your landlord must…" and "You need to…".
+Calm, plain English, never alarmist. Only fixed periods in law (`legalBasis.deadline === "law"`) are called a "legal deadline". A legal duty with no fixed period (s11, s9A) is a "legal duty" with "Docket's target time". Pure Docket standards are a "Docket target (not a legal deadline)". Use `deadlineLabel()` from `src/lib/ui/labels.ts`. Copy reads to tenants as "Your landlord must…" and "You need to…".
 
 ## Checklist before finishing any UI change
 1. `grep -rnE "#[0-9a-fA-F]{6}|bg-(white|black|gray|blue|red|green|orange|amber|slate)" src --include=*.tsx` returns nothing new.

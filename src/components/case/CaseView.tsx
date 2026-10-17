@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { getCase, recompute } from "@/lib/cases/service";
 import type { Category, Obligation, Severity } from "@/lib/domain/types";
-import { CATEGORY_LABEL, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, fmtDateTime, plainDuty } from "@/lib/ui/labels";
+import { CATEGORY_LABEL, FACT_PLAIN, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, factValuePlain, deadlineLabel, fmtDateTime, plainDuty, sourcePlain } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
 import { LandlordActions } from "./LandlordActions";
 import { TenantActions } from "./TenantActions";
@@ -57,9 +57,9 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           <Section title="Things to know">
             {s.conflicts.map((cf) => (
               <p key={cf.key} className="text-sm">
-                ⚖️ Sources disagree on <b>{cf.key}</b>:{" "}
-                {cf.candidates.map((b) => `${b.source.label ?? b.source.kind} → ${String(b.value)}`).join(" vs ")}.{" "}
-                {cf.resolution === "safety_first" ? "Acting on the most severe until resolved." : "Using the most reliable source."}
+                ⚖️ Sources disagree on <b>{FACT_PLAIN[cf.key]}</b>:{" "}
+                {cf.candidates.map((b) => `${sourcePlain(b.source)} says "${factValuePlain(b.value)}"`).join(" vs ")}.{" "}
+                {cf.resolution === "safety_first" ? "Docket takes the safer view until this is resolved." : "Docket goes with the most reliable source."}
               </p>
             ))}
             {s.notes.map((n) => <p key={n} className="text-sm">ℹ️ {n}</p>)}
@@ -72,7 +72,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
             {c.revisions.map((r, i) => (
               <li key={i} className="text-sm">
                 <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(r.at.toISOString())}</span>
-                <span className={r.kind === "obligation_abandoned" || r.kind === "obligation_breached" ? "text-danger" : ""}>{r.summary}</span>
+                <span className={r.kind === "obligation_breached" ? "text-danger" : r.kind === "obligation_abandoned" || r.kind === "obligation_reopened" ? "text-terracotta-dark" : ""}>{r.summary}</span>
               </li>
             ))}
           </ul>
@@ -132,7 +132,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
 }
 
 function ObligationRow({ o, now, role, landlordName }: { o: Obligation; now: string; role: "tenant" | "landlord"; landlordName: string }) {
-  const kind = o.legalBasis.statutory ? "Legal duty" : "Docket target (not a legal deadline)";
+  const kind = deadlineLabel(o);
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-0">
       <div className="min-w-0">
@@ -148,10 +148,23 @@ function ObligationRow({ o, now, role, landlordName }: { o: Obligation; now: str
           <details className="text-xs text-muted">
             <summary className="cursor-pointer py-1">{kind} · why?</summary>
             <p>{o.reason}</p>
-            <p className="mt-1">{o.legalBasis.citation}</p>
+            <p className="mt-1">
+              {o.legalBasis.url ? (
+                <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="text-teal underline">{o.legalBasis.citation}</a>
+              ) : (
+                o.legalBasis.citation
+              )}
+            </p>
           </details>
         ) : (
-          <p className="text-xs text-muted">{kind} · {o.legalBasis.citation}</p>
+          <p className="text-xs text-muted">
+            {kind} ·{" "}
+            {o.legalBasis.url ? (
+              <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="underline hover:text-teal">{o.legalBasis.citation}</a>
+            ) : (
+              o.legalBasis.citation
+            )}
+          </p>
         )}
         {o.pausedMs > 0 && <p className="text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>}
       </div>
@@ -186,7 +199,7 @@ function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlor
       </p>
       <div className="mt-1 flex items-center gap-2">
         <Countdown dueAt={o.dueAt} serverNow={now} />
-        {o.legalBasis.statutory && <span className="text-xs text-muted">· legal deadline</span>}
+        <span className="text-xs text-muted">· {o.legalBasis.deadline === "law" ? "legal deadline" : o.legalBasis.statutory ? "legal duty, Docket target time" : "Docket target"}</span>
       </div>
       {breached && o.party === "landlord" && (
         <p className="mt-2 text-sm">You can escalate this — see the options under <b>Your actions</b>.</p>

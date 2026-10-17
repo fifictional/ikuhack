@@ -9,6 +9,7 @@ const FACT_LABEL: Record<FactKey, string> = {
   "cause.tenantDamage": "whether the household caused the damage",
   "household.vulnerable": "someone vulnerable at home",
   "hazard.dampPersistent": "persistent damp (sensor)",
+  "fix.verified": "whether the repair worked",
 };
 
 const fmt = (v: unknown) =>
@@ -32,7 +33,7 @@ export function diff(prev: CaseState | null, next: CaseState): Revision[] {
       out.push({
         kind: "fact_revised",
         factKey: f.key,
-        summary: `${f.key} revised from "${fmt(before.value)}" to "${fmt(f.value)}" (source: ${f.belief.source.label ?? f.belief.source.kind}).`,
+        summary: `Docket updated ${FACT_LABEL[f.key]}: "${fmt(before.value)}" → "${fmt(f.value)}" (source: ${f.belief.source.label ?? f.belief.source.kind}).`,
         detail: { from: before.value, to: f.value, beliefId: f.belief.id },
       });
     }
@@ -45,9 +46,9 @@ export function diff(prev: CaseState | null, next: CaseState): Revision[] {
       out.push({
         kind: "conflict_detected",
         factKey: c.key,
-        summary: `Sources disagree on ${c.key}: ${c.candidates
+        summary: `Sources disagree on ${FACT_LABEL[c.key]}: ${c.candidates
           .map((b) => `${b.source.label ?? b.source.kind} says "${fmt(b.value)}"`)
-          .join(" vs ")}. Resolved ${c.resolution === "safety_first" ? "safety-first (most severe)" : "by most reliable source"}.`,
+          .join(" vs ")}. ${c.resolution === "safety_first" ? "Docket takes the safer view until it's resolved." : "Docket goes with the most reliable source."}`,
         detail: { candidates: c.candidates.map((b) => b.id), chosenId: c.chosenId },
       });
     }
@@ -67,7 +68,7 @@ export function diff(prev: CaseState | null, next: CaseState): Revision[] {
       out.push({
         kind: "obligation_added",
         obligationId: id,
-        summary: `New ${o.legalBasis.statutory ? "legal duty" : "target"} for ${o.party}: "${o.title}" by ${when(o.dueAt)}.`,
+        summary: `New ${o.legalBasis.deadline === "law" ? "legal deadline" : o.legalBasis.statutory ? "legal duty" : "target"} for ${o.party}: "${o.title}" by ${when(o.dueAt)}.`,
       });
       continue;
     }
@@ -82,6 +83,8 @@ export function diff(prev: CaseState | null, next: CaseState): Revision[] {
     if (before.status !== o.status) {
       if (o.status === "breached") {
         out.push({ kind: "obligation_breached", obligationId: id, summary: `${o.party} missed "${o.title}" (due ${when(o.dueAt)}).` });
+      } else if ((before.status === "met" || before.status === "met_late") && o.status === "open") {
+        out.push({ kind: "obligation_reopened", obligationId: id, summary: `Reopened "${o.title}": it was marked done, but the evidence says it isn't.` });
       } else if (o.status === "met" || o.status === "met_late") {
         out.push({ kind: "obligation_met", obligationId: id, summary: `"${o.title}" met${o.status === "met_late" ? " late" : ""}.` });
       }

@@ -43,7 +43,8 @@ export async function buildBundle(caseId: string): Promise<Uint8Array> {
   line("Duties", { size: 13, bold: true });
   for (const o of c.state.obligations) {
     line(`[${o.status.toUpperCase()}] ${o.party}: ${o.title} — due ${o.dueAt}`);
-    line(`    ${o.legalBasis.citation}${o.legalBasis.statutory ? "" : " (Docket target, not statutory)"}`);
+    const kind = !o.legalBasis.statutory ? "Docket target" : o.legalBasis.deadline === "law" ? "legal deadline" : "legal duty; deadline is Docket's target for a reasonable time";
+    line(`    ${o.legalBasis.citation} (${kind})${o.legalBasis.url ? ` ${o.legalBasis.url}` : ""}`);
   }
   y -= 10;
 

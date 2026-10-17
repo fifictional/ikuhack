@@ -18,8 +18,9 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // postgres.js and the Solana SDK are Node-only; don't bundle them.
-  serverExternalPackages: ["postgres", "@solana/web3.js"],
+  // postgres.js is Node-only; don't bundle it. @solana/web3.js is bundled on purpose: left external, Vercel's
+  // runtime require()s rpc-websockets' ESM-only uuid and crashes every route that imports it (ERR_REQUIRE_ESM).
+  serverExternalPackages: ["postgres"],
 };
 
 export default nextConfig;

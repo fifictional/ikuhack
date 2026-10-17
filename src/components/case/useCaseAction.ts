@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Actor, EventBody } from "@/lib/domain/types";
+import { captureMethodOf } from "@/lib/evidence/live";
 
 export type FixCheckResponse = {
   status?: "recorded" | "unclear" | "skipped";
@@ -33,6 +34,7 @@ export function useCaseAction(caseId: string, actor: Actor) {
     form.set("file", file);
     form.set("actor", actor);
     form.set("kind", file.type.startsWith("image/") ? "photo" : file.type.startsWith("video/") ? "video" : "document");
+    form.set("capture", captureMethodOf(file));
     if (caption) form.set("caption", caption);
     const res = await fetch(`/api/cases/${caseId}/evidence`, { method: "POST", body: form });
     if (!res.ok) setError((await res.json()).error ?? "Upload failed");

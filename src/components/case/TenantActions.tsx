@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { CaseState, EscalationRoute } from "@/lib/domain/types";
 import { ESCALATION_LABEL } from "@/lib/ui/labels";
 import { Btn } from "./LandlordActions";
+import { LiveCamera } from "./LiveCamera";
 import { useCaseAction } from "./useCaseAction";
 
 /** Tenant actions: add evidence, add context, confirm/dispute the fix, escalate. */
@@ -36,11 +37,14 @@ export function TenantActions({
     <div className="space-y-4 rounded-xl border border-border bg-surface p-4 text-sm">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your actions</h2>
 
-      <label className="block cursor-pointer rounded-md border border-dashed border-border p-3 text-center hover:border-primary hover:bg-primary-tint">
-        Add photo or video
-        <input type="file" accept="image/*,video/*" capture="environment" className="hidden"
-          onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
-      </label>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="flex cursor-pointer items-center justify-center rounded-md border border-dashed border-border p-3 text-center hover:border-primary hover:bg-primary-tint">
+          Upload photo or video
+          <input type="file" accept="image/*,video/*" className="hidden"
+            onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+        </label>
+        <LiveCamera label="Take a photo now" onCapture={(f) => upload(f)} />
+      </div>
 
       {!vulnerable && (
         <Btn disabled={pending} onClick={() => send({ type: "FACT_ASSERTED", key: "household.vulnerable", value: true, source: { kind: "tenant" } })}>

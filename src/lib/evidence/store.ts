@@ -15,12 +15,14 @@ export async function addEvidence(input: {
   bytes: Uint8Array;
   filename?: string;
   caption?: string;
+  /** "live" = taken in Docket's camera, "upload" = picked from the device. Reported by the browser. */
+  captureMethod?: "live" | "upload";
 }) {
   const sha256 = sha256Hex(input.bytes);
   const [row] = await db()`
-    INSERT INTO evidence (case_id, kind, mime, filename, caption, sha256, bytes, uploaded_by)
+    INSERT INTO evidence (case_id, kind, mime, filename, caption, sha256, bytes, uploaded_by, capture_method)
     VALUES (${input.caseId}, ${input.kind}, ${input.mime}, ${input.filename ?? null}, ${input.caption ?? null},
-            ${sha256}, ${Buffer.from(input.bytes)}, ${input.uploadedBy})
+            ${sha256}, ${Buffer.from(input.bytes)}, ${input.uploadedBy}, ${input.captureMethod ?? null})
     RETURNING id`;
   await appendEvent(input.caseId, input.uploadedBy, {
     type: "EVIDENCE_ADDED",

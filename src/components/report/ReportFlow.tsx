@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { IntakeDraft } from "@/lib/ai/intake";
 import { CATEGORY_LABEL } from "@/lib/ui/labels";
+import { LiveCamera } from "@/components/case/LiveCamera";
+import { captureMethodOf } from "@/lib/evidence/live";
+import { PhotoThumbs } from "./PhotoThumbs";
 import { VoiceNoteButton } from "./VoiceNoteButton";
 import { VoiceReport } from "./VoiceReport";
 
@@ -75,6 +78,7 @@ export function ReportFlow() {
       form.set("file", p);
       form.set("actor", "tenant");
       form.set("kind", "photo");
+      form.set("capture", captureMethodOf(p));
       await fetch(`/api/cases/${body.caseId}/evidence`, { method: "POST", body: form });
     }
     router.push(`/tenant/cases/${body.caseId}`);
@@ -99,11 +103,21 @@ export function ReportFlow() {
             placeholder="e.g. Black mould is spreading on the bedroom wall and my baby keeps coughing"
             className="w-full rounded-lg border border-border bg-surface p-3" />
           <VoiceNoteButton onText={(t) => setText((prev) => (prev ? `${prev} ${t}` : t))} />
-          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-sm font-medium text-primary hover:border-primary hover:bg-primary-tint">
-            {photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} added — change` : "Add photos (optional)"}
-            <input type="file" accept="image/*" multiple capture="environment" className="sr-only"
-              onChange={(e) => setPhotos([...(e.target.files ?? [])])} />
-          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-center text-sm font-medium text-primary hover:border-primary hover:bg-primary-tint">
+              Upload photos
+              <input type="file" accept="image/*" multiple className="sr-only"
+                onChange={(e) => setPhotos((prev) => [...prev, ...(e.target.files ?? [])])} />
+            </label>
+            <LiveCamera label="Take a photo now" onCapture={(f) => setPhotos((prev) => [...prev, f])} />
+          </div>
+          {photos.length > 0 && <PhotoThumbs photos={photos} onRemove={(i) => setPhotos((prev) => prev.filter((_, j) => j !== i))} />}
+          {photos.length > 0 && (
+            <p className="flex items-center justify-between text-sm text-muted">
+              <span>{photos.length} photo{photos.length > 1 ? "s" : ""} added ({photos.filter((p) => captureMethodOf(p) === "live").length} taken live)</span>
+              <button type="button" onClick={() => setPhotos([])} className="underline hover:text-primary">Clear</button>
+            </p>
+          )}
           <button disabled={busy || (!text && photos.length === 0)} onClick={() => analyse()}
             className="w-full rounded-lg bg-primary font-semibold text-white hover:bg-primary-dark py-3 disabled:opacity-50">
             {busy ? "Reading your report…" : "Continue"}

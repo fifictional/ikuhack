@@ -4,6 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Actor, EventBody } from "@/lib/domain/types";
 
+export type FixCheckResponse = {
+  status?: "recorded" | "unclear" | "skipped";
+  reason?: string;
+  result?: { verdict: "fixed" | "not_fixed" | "unclear"; confidence: number; observations: string; remainingProblems: string[] };
+  error?: string;
+};
+
 /** Post an event to a case, then refresh the server components. */
 export function useCaseAction(caseId: string, actor: Actor) {
   const router = useRouter();
@@ -32,5 +39,15 @@ export function useCaseAction(caseId: string, actor: Actor) {
     startTransition(() => router.refresh());
   }
 
-  return { send, upload, pending, error };
+  /** Ask Gemini to compare the tenant's "before" photos with the contractor's "after" photos. */
+  async function checkFix(): Promise<FixCheckResponse> {
+    setError(null);
+    const res = await fetch(`/api/cases/${caseId}/check-fix`, { method: "POST" });
+    const body = await res.json();
+    if (!res.ok) setError(body.error ?? "Photo check failed");
+    startTransition(() => router.refresh());
+    return body;
+  }
+
+  return { send, upload, checkFix, pending, error };
 }

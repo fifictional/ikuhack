@@ -25,6 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Link>
             <Link href="/tenant" className="font-medium text-ink/80 hover:text-primary">Tenant</Link>
             <Link href="/landlord" className="font-medium text-ink/80 hover:text-primary">Landlord</Link>
+            <Link href="/proof" className="hidden font-medium text-ink/80 hover:text-primary sm:inline">Proof</Link>
             <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-primary sm:inline">Verify</Link>
             <Link href="/demo" className="ml-auto hidden font-medium text-ink/80 hover:text-primary sm:inline">Demo</Link>
           </nav>

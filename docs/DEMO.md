@@ -9,6 +9,6 @@ Setup: `db:seed`, clock reset, two browser windows side by side: **tenant (phone
    - Second case: the dishwasher "won't drain". The contractor records a leak into the subfloor → the **appliance duty is dropped, s11 repair duty added**, with the reason given.
 4. **Accountability on both sides (20s).** The tenant misses an access slot → the landlord's clock **pauses** and the tenant's duty shows as missed.
 5. **Deadline missed (30s).** `/demo` +1 week → breach → the tenant sees *Letter of claim*, a pre-filled pre-action protocol letter plus a PDF evidence bundle.
-6. **Proof (15s).** Anchor → Solana Explorer link → `/verify` with the original photo shows ✓ unaltered.
+6. **Proof (25s).** Landlord dashboard → *Record an inspection* (attach a certificate) → it is anchored on Solana within seconds → open **/proof**: "✓ Verified live on Solana", the Explorer link, and the Merkle diagram. Then `/verify` with the same file shows ✓ confirmed on-chain. Run `npm run solana:check` beforehand to confirm the wallet is funded.
 7. **Law changes (10s).** `/demo` → *Commence Awaab phase 2* → the heating case on the dashboard gains statutory clocks instantly.
 8. **Close (10s).** Free for tenants; landlords pay per home for provable compliance.

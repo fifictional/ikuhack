@@ -14,6 +14,7 @@
     "db:seed": "tsx scripts/seed.ts",
     "sensors:simulate": "tsx scripts/simulate-sensors.ts",
     "solana:keygen": "tsx scripts/solana-keygen.ts",
+    "solana:check": "tsx scripts/solana-check.ts",
     "eval:intake": "tsx scripts/eval-intake.ts",
     "voice:setup": "tsx scripts/setup-voice-agent.ts",
     "demo:photos": "tsx scripts/make-demo-photos.ts"

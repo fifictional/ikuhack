@@ -330,9 +330,9 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               y1={s.y ?? 0}
               x2={tg.x ?? 0}
               y2={tg.y ?? 0}
-              stroke={onPath ? "var(--terracotta)" : "var(--line)"}
-              strokeWidth={onPath ? 2.5 : 1.1}
-              opacity={onPath ? 0.9 : 0.5}
+              stroke={onPath ? "var(--terracotta)" : "var(--muted)"}
+              strokeWidth={onPath ? 2.5 : 1.3}
+              opacity={onPath ? 0.9 : 0.65}
               strokeDasharray={onPath ? "4 3" : undefined}
             />
           );

@@ -332,8 +332,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               y2={tg.y ?? 0}
               stroke={onPath ? "var(--terracotta)" : "var(--muted)"}
               strokeWidth={onPath ? 2.5 : 1.3}
-              opacity={onPath ? 0.9 : 0.65}
-              strokeDasharray={onPath ? "4 3" : undefined}
+              opacity={onPath ? 0.9 : 0.5}
             />
           );
         })}
@@ -353,11 +352,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               onPointerEnter={() => setHovered(n.id)}
               onPointerLeave={() => setHovered(null)}
             >
-              {isFocus && (
-                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill="var(--terracotta)" opacity={0.25}>
-                  <animate attributeName="r" values="20;36;20" dur="1.8s" repeatCount="indefinite" />
-                </circle>
-              )}
+              {isFocus && <circle cx={n.x ?? 0} cy={n.y ?? 0} r={26} fill="var(--terracotta)" opacity={0.2} />}
               <circle
                 cx={n.x ?? 0}
                 cy={n.y ?? 0}

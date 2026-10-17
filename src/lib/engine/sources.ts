@@ -130,6 +130,34 @@ export const LEGAL_SOURCES = {
       caveat: "'As soon as reasonably practicable' has no fixed period; Docket uses a 24h target. Coverage of social tenancies depends on the Schedule to the 2015 Regulations as amended: confirm before pitching it for social homes.",
     },
   },
+  gas_safety_regs_1998: {
+    id: "gas_safety_regs_1998",
+    kind: "regulations",
+    short: "Gas Safety Regs 1998",
+    citation: "Gas Safety (Installation and Use) Regulations 1998 (SI 1998/2451), reg 36",
+    url: "https://www.legislation.gov.uk/uksi/1998/2451/regulation/36/made",
+    provides:
+      "A landlord must have every gas appliance and flue checked by a Gas Safe registered engineer at least every 12 months, keep the record for 2 years, and give the tenant a copy within 28 days of the check.",
+    verified: {
+      on: CHECKED,
+      what: "Annual check, 2-year record retention and 28-day copy taken from reg 36.",
+      caveat: "Re-confirm the reg 36 wording and the copy deadline on legislation.gov.uk before the pitch.",
+    },
+  },
+  eicr_regs_2020: {
+    id: "eicr_regs_2020",
+    kind: "regulations",
+    short: "EICR Regs 2020",
+    citation: "Electrical Safety Standards in the Private Rented Sector (England) Regulations 2020 (SI 2020/312), reg 3",
+    url: "https://www.legislation.gov.uk/uksi/2020/312/regulation/3/made",
+    provides:
+      "The electrical installation must be inspected and tested at least every 5 years by a qualified person, and the tenant must be given a copy of the report within 28 days of the inspection.",
+    verified: {
+      on: CHECKED,
+      what: "5-year inspection cycle and 28-day copy taken from reg 3.",
+      caveat: "These Regulations apply to the private rented sector in England; social landlords have a separate regime. Re-confirm the reg numbers before the pitch.",
+    },
+  },
   pap_housing: {
     id: "pap_housing",
     kind: "protocol",

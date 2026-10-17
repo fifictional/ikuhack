@@ -64,6 +64,12 @@ export async function anchorPending() {
   return { anchorId: anchor.id as string, root: tree.root, signature, url: explorerUrl(signature), leaves: leaves.length };
 }
 
+export async function listAnchors(limit = 5) {
+  return db()<{ id: string; merkle_root: string; leaf_count: number; cluster: string; tx_signature: string | null; created_at: Date }[]>`
+    SELECT id, merkle_root, leaf_count, cluster, tx_signature, created_at
+    FROM anchors ORDER BY created_at DESC LIMIT ${limit}`;
+}
+
 /** Look up a hash and prove it is included in an anchored root. */
 export async function verifyLeaf(leaf: string) {
   const [row] = await db()`

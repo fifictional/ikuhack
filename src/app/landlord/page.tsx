@@ -1,7 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CaseList } from "@/components/case/CaseList";
-import { listCases, recomputeAll } from "@/lib/cases/service";
+import { listCases } from "@/lib/cases/service";
 import { getNow } from "@/lib/db/settings";
 import { DEMO } from "@/lib/demo";
 
@@ -21,7 +21,6 @@ export default function LandlordDashboard() {
 
 async function Portfolio() {
   await connection();
-  await recomputeAll(); // keep clocks fresh. TODO(person B): move to a cron (/api/tick) once there are many cases.
   const [cases, now] = await Promise.all([listCases({ landlordId: DEMO.landlordId }), getNow()]);
   const obligations = cases.flatMap((c) => c.state?.obligations.filter((o) => o.party === "landlord" && o.legalBasis.statutory) ?? []);
   const breached = obligations.filter((o) => o.status === "breached").length;

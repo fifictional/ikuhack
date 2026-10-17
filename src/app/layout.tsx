@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist, Geist_Mono } from "next/font/google";
+import { Logo } from "@/components/brand/Logo";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// Display face for the wordmark and headings (matches the logo's heavy grotesque).
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["600", "700", "800"] });
 
 export const metadata: Metadata = {
   title: "Docket — rental repairs, on the clock and on the record",
@@ -13,15 +16,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-GB" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en-GB" className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-border bg-surface">
-          <nav className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3 text-sm">
-            <Link href="/" className="text-base font-semibold tracking-tight">Docket</Link>
-            <Link href="/tenant" className="text-muted hover:text-foreground">Tenant</Link>
-            <Link href="/landlord" className="text-muted hover:text-foreground">Landlord</Link>
-            <Link href="/verify" className="text-muted hover:text-foreground">Verify</Link>
-            <Link href="/demo" className="ml-auto text-muted hover:text-foreground">Demo controls</Link>
+        <header className="border-b border-border bg-cream">
+          <nav className="mx-auto flex max-w-5xl items-center gap-x-4 px-4 py-3 text-sm sm:gap-x-6">
+            <Link href="/" aria-label="Docket home" className="mr-2">
+              <Logo size={24} />
+            </Link>
+            <Link href="/tenant" className="font-medium text-ink/80 hover:text-teal">Tenant</Link>
+            <Link href="/landlord" className="font-medium text-ink/80 hover:text-teal">Landlord</Link>
+            <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-teal sm:inline">Verify</Link>
+            <Link href="/demo" className="ml-auto hidden font-medium text-ink/80 hover:text-teal sm:inline">Demo</Link>
           </nav>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>

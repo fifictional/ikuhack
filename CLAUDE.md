@@ -49,6 +49,10 @@ npm run solana:keygen      # devnet keypair → .env.local + airdrop
 
 Keep the repo outside iCloud-synced folders (Desktop, Documents); it lives at `~/dev/ikuhack`. When it was under `~/Documents`, iCloud offloaded files in `node_modules`, and every Node tool (tsx, next build, eslint) hung at near-zero CPU while macOS re-downloaded them. If a Node command hangs, check with `find node_modules -flags +dataless | head`.
 
+## UI and brand
+
+All UI must follow the brand system in `.claude/skills/docket-brand/SKILL.md`: teal, terracotta, ink, cream and white only, used through the tokens in `src/app/globals.css`, never raw hex or Tailwind's default palette. The logo is `src/components/brand/Logo.tsx`. Load that skill before any UI change.
+
 ## Conventions
 
 - TypeScript strict, zod at every boundary (API input, LLM output).

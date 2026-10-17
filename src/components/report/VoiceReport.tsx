@@ -59,7 +59,7 @@ function VoiceInner() {
       <button
         onClick={live ? conversation.endSession : start}
         className={`mx-auto flex h-28 w-28 items-center justify-center rounded-full text-white transition ${
-          live ? (conversation.isSpeaking ? "scale-105 bg-accent" : "bg-accent/80") : "bg-foreground"
+          live ? (conversation.isSpeaking ? "scale-105 bg-terracotta" : "bg-teal") : "bg-teal hover:bg-teal-dark"
         }`}
       >
         {live ? "End" : "Tap to talk"}
@@ -68,7 +68,7 @@ function VoiceInner() {
         {live ? (conversation.isSpeaking ? "Docket is speaking…" : "Listening…") : "Speak in any language. Tell us what's wrong and where."}
       </p>
       {caseId && (
-        <Link href={`/tenant/cases/${caseId}`} className="block text-accent underline">View your logged repair</Link>
+        <Link href={`/tenant/cases/${caseId}`} className="block font-medium text-teal underline">View your logged repair</Link>
       )}
       {error && <p className="text-sm text-danger">{error}</p>}
     </div>

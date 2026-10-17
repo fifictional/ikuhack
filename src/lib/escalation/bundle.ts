@@ -8,6 +8,10 @@ import { verifyLeaf } from "@/lib/solana/anchor";
  * SHA-256 + Solana proof link, then the photos. Hand this to a solicitor,
  * the council or the Ombudsman.
  */
+// Brand colours (see .claude/skills/docket-brand/SKILL.md).
+const TEAL = rgb(0x12 / 255, 0x59 / 255, 0x51 / 255);
+const INK = rgb(0x2b / 255, 0x26 / 255, 0x20 / 255);
+
 export async function buildBundle(caseId: string): Promise<Uint8Array> {
   const c = await getCase(caseId);
   if (!c) throw new Error("Case not found");
@@ -25,7 +29,7 @@ export async function buildBundle(caseId: string): Promise<Uint8Array> {
         page = pdf.addPage();
         y = page.getHeight() - 50;
       }
-      page.drawText(chunk, { x: 50, y, size, font: opts.bold ? bold : font, color: rgb(0.1, 0.1, 0.1) });
+      page.drawText(chunk, { x: 50, y, size, font: opts.bold ? bold : font, color: opts.bold ? TEAL : INK });
       y -= size + 4;
     }
   };

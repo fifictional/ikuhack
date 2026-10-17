@@ -109,7 +109,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               ) : null,
             )}
           </div>
-          <a href={`/api/cases/${caseId}/bundle`} className="block text-sm text-accent underline" target="_blank">
+          <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-teal underline" target="_blank">
             Download evidence bundle (PDF)
           </a>
         </Section>
@@ -166,7 +166,7 @@ function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlor
   }
   const breached = o.status === "breached";
   return (
-    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger" : "border-accent"} bg-surface`}>
+    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger bg-surface" : "border-teal bg-teal-tint"}`}>
       <p className="text-sm text-muted">{breached ? "Deadline missed" : "What happens next"}</p>
       <p className="text-lg font-semibold">
         {plainDuty(o, landlordName)} {breached ? "— this was due" : "by"} {fmtDateTime(o.dueAt)}

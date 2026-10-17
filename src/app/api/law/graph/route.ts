@@ -1,4 +1,4 @@
-import { lawGraph } from "@/lib/law/sources";
+import { lawGraph } from "@/lib/law/graph";
 import { handle } from "@/lib/http";
 
 /**

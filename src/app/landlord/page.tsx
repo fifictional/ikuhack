@@ -22,7 +22,8 @@ export default function LandlordDashboard() {
 async function Portfolio() {
   await connection();
   const [cases, now] = await Promise.all([listCases({ landlordId: DEMO.landlordId }), getNow()]);
-  const obligations = cases.flatMap((c) => c.state?.obligations.filter((o) => o.party === "landlord" && o.legalBasis.statutory) ?? []);
+  // "Legal deadlines" means fixed periods set by law (e.g. Awaab's Law), not Docket's targets for "reasonable time" duties.
+  const obligations = cases.flatMap((c) => c.state?.obligations.filter((o) => o.party === "landlord" && o.legalBasis.deadline === "law") ?? []);
   const breached = obligations.filter((o) => o.status === "breached").length;
   const dueToday = obligations.filter(
     (o) => o.status === "open" && new Date(o.dueAt).getTime() - now.getTime() < 86_400_000,

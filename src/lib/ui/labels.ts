@@ -1,4 +1,4 @@
-import type { CaseEvent, CaseState, Category, EscalationRoute, Obligation, Severity } from "@/lib/domain/types";
+import type { CaseEvent, CaseState, Category, EscalationRoute, FactKey, Obligation, Severity } from "@/lib/domain/types";
 
 export const CATEGORY_LABEL: Record<Category, string> = {
   damp_mould: "Damp & mould",
@@ -75,6 +75,34 @@ const PLAIN_DUTY: Record<string, string> = {
 export function plainDuty(o: Obligation, landlordName: string): string {
   const phrase = PLAIN_DUTY[o.id.split(":")[0]] ?? o.title.toLowerCase();
   return o.party === "tenant" ? `You need to ${phrase}` : `${landlordName} must ${phrase}`;
+}
+
+/** Plain-English names for facts, for conflict and history displays. */
+export const FACT_PLAIN: Record<FactKey, string> = {
+  "issue.category": "what the problem is",
+  "issue.severity": "how serious it is",
+  "issue.location": "where it is",
+  "issue.summary": "the description",
+  "appliance.suppliedByLandlord": "whether the landlord supplied the appliance",
+  "cause.tenantDamage": "whether the household caused the damage",
+  "household.vulnerable": "whether someone vulnerable lives there",
+  "hazard.dampPersistent": "whether the damp is persistent",
+  "fix.verified": "whether the repair worked",
+};
+
+export const factValuePlain = (v: unknown) =>
+  v === true ? "yes" : v === false ? "no" : typeof v === "string" ? v.replaceAll("_", " ") : String(v);
+
+const SOURCE_PLAIN: Record<string, string> = {
+  tenant: "Tenant", landlord: "Landlord", contractor: "Contractor", surveyor: "Surveyor", sensor: "Sensor",
+  tenancy_agreement: "Tenancy agreement", official_record: "Official record", ai_vision: "Gemini (photos)", ai_text: "Gemini", system: "Docket",
+};
+export const sourcePlain = (s: { kind: string; label?: string }) => s.label ?? SOURCE_PLAIN[s.kind] ?? s.kind;
+
+/** How to describe a duty's deadline. Only "law" deadlines may be called legal deadlines. */
+export function deadlineLabel(o: Obligation): string {
+  if (!o.legalBasis.statutory) return "Docket target (not a legal deadline)";
+  return o.legalBasis.deadline === "law" ? "Legal deadline" : "Legal duty · Docket's target time (the law says 'a reasonable time')";
 }
 
 export const SEVERITY_PLAIN: Record<Severity, string> = {

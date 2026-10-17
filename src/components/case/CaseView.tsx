@@ -2,8 +2,10 @@ import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { getCase, recompute } from "@/lib/cases/service";
 import type { Category, Obligation, Severity } from "@/lib/domain/types";
-import { CATEGORY_LABEL, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, fmtDateTime, plainDuty } from "@/lib/ui/labels";
+import { CATEGORY_LABEL, FACT_PLAIN, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, factValuePlain, fmtDateTime, plainDuty, sourcePlain } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
+import { PhotoAuthenticity } from "./PhotoAuthenticity";
+import { ListenButton } from "./ListenButton";
 import { LandlordActions } from "./LandlordActions";
 import { ObligationList } from "./ObligationList";
 import { TenantActions } from "./TenantActions";
@@ -41,7 +43,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           </div>
         </header>
 
-        {role === "tenant" && <NextStep o={next} landlordName={c.landlord_name} now={s.computedAt} />}
+        {role === "tenant" && <NextStep o={next} landlordName={c.landlord_name} now={s.computedAt} caseId={caseId} />}
 
         <Section title={role === "tenant" ? "Everything that's due" : "Who must do what, by when"}>
           {open.length === 0 && <p className="text-sm text-muted">Nothing is due right now.</p>}
@@ -58,9 +60,9 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           <Section title="Things to know">
             {s.conflicts.map((cf) => (
               <p key={cf.key} className="text-sm">
-                ⚖️ Sources disagree on <b>{cf.key}</b>:{" "}
-                {cf.candidates.map((b) => `${b.source.label ?? b.source.kind} → ${String(b.value)}`).join(" vs ")}.{" "}
-                {cf.resolution === "safety_first" ? "Acting on the most severe until resolved." : "Using the most reliable source."}
+                ⚖️ Sources disagree on <b>{FACT_PLAIN[cf.key]}</b>:{" "}
+                {cf.candidates.map((b) => `${sourcePlain(b.source)} says "${factValuePlain(b.value)}"`).join(" vs ")}.{" "}
+                {cf.resolution === "safety_first" ? "Docket takes the safer view until this is resolved." : "Docket goes with the most reliable source."}
               </p>
             ))}
             {s.notes.map((n) => <p key={n} className="text-sm">ℹ️ {n}</p>)}
@@ -73,7 +75,8 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
             {c.revisions.map((r, i) => (
               <li key={i} className="text-sm">
                 <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(r.at.toISOString())}</span>
-                <span className={r.kind === "obligation_abandoned" || r.kind === "obligation_breached" ? "text-danger" : ""}>{r.summary}</span>
+                <span className={r.kind === "obligation_breached" ? "text-danger" : r.kind === "obligation_abandoned" || r.kind === "obligation_reopened" ? "text-highlight-dark" : ""}>{r.summary}</span>
+                {role === "tenant" && i < 3 && <span className="ml-2 align-middle"><ListenButton caseId={caseId} text={r.summary.slice(0, 600)} /></span>}
               </li>
             ))}
           </ul>
@@ -102,6 +105,11 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           <TenantActions caseId={caseId} escalationOptions={s.escalationOptions} phase={s.phase} vulnerable={s.facts["household.vulnerable"]?.value === true} />
         )}
         <Section title={`Evidence (${evidence.length})`}>
+          {role === "landlord" ? (
+            <div className="space-y-2">
+              {evidence.map((e) => (e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? <PhotoAuthenticity key={e.id} evidenceId={e.evidenceId} caption={e.caption} /> : null))}
+            </div>
+          ) : (
           <div className="grid grid-cols-3 gap-2">
             {evidence.map((e) =>
               e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? (
@@ -110,7 +118,21 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               ) : null,
             )}
           </div>
-          <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-teal underline" target="_blank">
+          )}
+          {evidence.some((e) => e.type === "EVIDENCE_ADDED" && e.kind !== "photo") && (
+            <ul className="space-y-1 text-sm">
+              {evidence.map((e) =>
+                e.type === "EVIDENCE_ADDED" && e.kind !== "photo" ? (
+                  <li key={e.id}>
+                    <a href={`/api/evidence/${e.evidenceId}`} target="_blank" className="font-medium text-primary underline">
+                      {e.caption ?? e.kind}
+                    </a>
+                  </li>
+                ) : null,
+              )}
+            </ul>
+          )}
+          <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-primary underline" target="_blank">
             Download evidence bundle (PDF)
           </a>
         </Section>
@@ -120,7 +142,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
 }
 
 /** Tenant-only headline: the one thing that matters most right now. */
-function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlordName: string; now: string }) {
+function NextStep({ o, landlordName, now, caseId }: { o: Obligation | undefined; landlordName: string; now: string; caseId: string }) {
   if (!o) {
     return (
       <div className="rounded-xl border border-border bg-surface p-4">
@@ -131,14 +153,17 @@ function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlor
   }
   const breached = o.status === "breached";
   return (
-    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger bg-surface" : "border-teal bg-teal-tint"}`}>
+    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger bg-surface" : "border-primary bg-primary-tint"}`}>
       <p className="text-sm text-muted">{breached ? "Deadline missed" : "What happens next"}</p>
       <p className="text-lg font-semibold">
         {plainDuty(o, landlordName)} {breached ? "— this was due" : "by"} {fmtDateTime(o.dueAt)}
       </p>
       <div className="mt-1 flex items-center gap-2">
         <Countdown dueAt={o.dueAt} serverNow={now} />
-        {o.legalBasis.statutory && <span className="text-xs text-muted">· legal deadline</span>}
+        <span className="text-xs text-muted">· {o.legalBasis.deadline === "law" ? "legal deadline" : o.legalBasis.statutory ? "legal duty, Docket target time" : "Docket target"}</span>
+      </div>
+      <div className="mt-2">
+        <ListenButton caseId={caseId} text={`${plainDuty(o, landlordName)} ${breached ? "was due" : "by"} ${fmtDateTime(o.dueAt)}.`} />
       </div>
       {breached && o.party === "landlord" && (
         <p className="mt-2 text-sm">You can escalate this — see the options under <b>Your actions</b>.</p>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Obligation } from "@/lib/domain/types";
-import { fmtDateTime, plainDuty } from "@/lib/ui/labels";
+import { deadlineLabel, fmtDateTime, plainDuty } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
 import { LawGraphPanel } from "@/components/law/LawGraphPanel";
 
@@ -45,7 +45,7 @@ function ObligationRow({
   landlordName: string;
   onWhy: () => void;
 }) {
-  const kind = o.legalBasis.statutory ? "Legal duty" : "Docket target (not a legal deadline)";
+  const kind = deadlineLabel(o);
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-0">
       <div className="min-w-0">
@@ -62,9 +62,17 @@ function ObligationRow({
         </p>
         <p className="text-xs text-muted">
           {kind} ·{" "}
-          <button type="button" onClick={onWhy} className="font-medium text-teal underline underline-offset-2 hover:text-teal-dark">
+          <button type="button" onClick={onWhy} className="font-medium text-primary underline underline-offset-2 hover:text-primary-dark">
             why?
           </button>
+          {o.legalBasis.url && (
+            <>
+              {" · "}
+              <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="underline hover:text-primary">
+                {o.legalBasis.citation}
+              </a>
+            </>
+          )}
         </p>
         {o.pausedMs > 0 && <p className="text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>}
       </div>

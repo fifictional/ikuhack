@@ -67,6 +67,8 @@ export const FACT_SCHEMAS = {
   "cause.tenantDamage": z.boolean(),
   "household.vulnerable": z.boolean(),
   "hazard.dampPersistent": z.boolean(),
+  /** Is the reported problem actually fixed? Contractor, tenant and Gemini photo checks can disagree. */
+  "fix.verified": z.boolean(),
 } as const;
 export type FactKey = keyof typeof FACT_SCHEMAS;
 export type FactValue<K extends FactKey> = z.infer<(typeof FACT_SCHEMAS)[K]>;
@@ -162,6 +164,8 @@ export interface Belief {
   score: number;
   /** Set when the engine inferred this belief from another one. */
   derivedFrom?: string;
+  /** Free-text context from the source, e.g. what a photo check saw. */
+  note?: string;
 }
 
 export interface Conflict {
@@ -184,10 +188,15 @@ export type Facts = Partial<Record<FactKey, ResolvedFact>>;
 
 export interface LegalBasis {
   citation: string;
-  /** false = Docket service standard / target, not a legal deadline. Never blur these in the UI. */
+  /** true = the DUTY comes from law (statute, regulations, protocol or case law); false = a Docket service standard. */
   statutory: boolean;
+  /**
+   * Who sets the deadline. "law" = a fixed period in the source (e.g. Awaab's Law 10 working days);
+   * "target" = Docket's own target for a "reasonable time" duty. Never call a target a legal deadline.
+   */
+  deadline: "law" | "target";
   url?: string;
-  /** Node id in the legal knowledge graph (src/lib/law/sources.ts / Neo4j). */
+  /** Entry in engine/sources.ts. */
   sourceId?: string;
 }
 
@@ -231,6 +240,7 @@ export type RevisionKind =
   | "deadline_changed"
   | "obligation_breached"
   | "obligation_met"
+  | "obligation_reopened"
   | "fact_revised"
   | "conflict_detected";
 

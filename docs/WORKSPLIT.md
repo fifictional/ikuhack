@@ -27,10 +27,10 @@ Done when a typed report shows up on the landlord dashboard with a live clock.
 
 ## Milestone 2: the differentiators
 **A (ElevenLabs)**
-- [ ] Agent configured per `docs/VOICE_AGENT.md`; voice report creates a case; `show_case` client tool links to it
-- [ ] Post-call webhook stores the transcript as evidence (`src/app/api/webhooks/elevenlabs/route.ts`)
-- [ ] Voice note → Scribe → fills the textarea (`/api/transcribe`)
-- [ ] "Listen" button on case updates: Gemini translate into the tenant's `preferred_language`, then `/api/tts`
+- [x] Agent created from code (`npm run voice:setup`); browser client tools create the case and link to it. Needs a live test with a real key
+- [x] Call transcript saved as case evidence from the browser when the call ends (no webhook needed)
+- [x] Voice note → Scribe → fills the textarea (`/api/transcribe`). Needs a live test with a real key
+- [x] "Listen" button on case updates: Gemini translate into the tenant's `preferred_language`, then `/api/tts` (translation cached in memory, audio in `tts_cache`)
 - [ ] Tenancy agreement upload → Gemini parse → `properties.tenancy` + facts (`TODO(person A)` in `intake.ts`)
 
 **B (Tiger Data + Solana + engine)**

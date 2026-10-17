@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, type Simulation, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
 import type { Obligation } from "@/lib/domain/types";
-import type { LawGraph, LawNode, LawNodeKind } from "@/lib/law/sources";
+import { deadlineLabel } from "@/lib/ui/labels";
+import type { LawGraph, LawNode, LawNodeKind } from "@/lib/law/graph";
 
 /**
  * Slide-in panel that shows the *whole* legal knowledge graph as an
@@ -24,33 +25,34 @@ const KIND_LABEL: Record<LawNodeKind, string> = {
   protocol: "Protocol",
   standard: "Service standard",
   hazard: "Hazard",
+  guidance: "Guidance",
 };
 
+// Greyscale palette from globals.css (status colours reserved for deadlines).
 const C = {
-  teal: "#125951",
-  tealDark: "#0c403a",
-  terracotta: "#c65729",
-  terracottaDark: "#a4461f",
-  ink: "#2b2620",
-  muted: "#6b6158",
-  cream: "#e9ddc7",
-  line: "#ddd0b8",
+  ink: "#1a1a1a",
+  muted: "#6b6b6b",
+  highlight: "#4a4a4a",
+  highlightDark: "#333333",
+  line: "#e4e4e0",
   white: "#ffffff",
+  logoDoor: "#8a8a8a",
 };
 
 const KIND_COLOR: Record<LawNodeKind, string> = {
-  statute: C.tealDark,
-  section: C.teal,
-  regulation: C.teal,
-  requirement: C.terracotta,
-  case: C.terracottaDark,
-  protocol: C.ink,
+  statute: C.ink,
+  section: C.highlight,
+  regulation: C.highlightDark,
+  requirement: "#000000",
+  case: C.logoDoor,
+  protocol: C.highlight,
   standard: C.muted,
-  hazard: C.cream,
+  hazard: C.line,
+  guidance: C.logoDoor,
 };
 
-/** Edges that trace a source back to its statute. Relevance links render but don't form the citation path. */
-const STRUCTURAL = new Set(["contains", "enacts", "prescribes", "informs"]);
+/** Legal relationships that trace a source back to its statute. Relevance links render but don't form the citation path. */
+const STRUCTURAL = new Set(["inserted_by", "made_under", "amended_by", "interprets", "extends"]);
 
 function ancestors(graph: LawGraph, id: string): Set<string> {
   const parents = new Map<string, string[]>();
@@ -116,7 +118,7 @@ export function LawGraphPanel({ obligation, onClose }: { obligation: Obligation 
 
   if (!obligation) return null;
 
-  const kind = obligation.legalBasis.statutory ? "Legal duty" : "Docket target";
+  const kind = deadlineLabel(obligation);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
@@ -137,7 +139,7 @@ export function LawGraphPanel({ obligation, onClose }: { obligation: Obligation 
         </div>
 
         <div className="space-y-5 px-5 py-5">
-          <div className="rounded-xl bg-teal-tint p-4">
+          <div className="rounded-xl bg-highlight-tint p-4">
             <p className="text-xs uppercase tracking-wide text-muted">In plain English</p>
             <p className="mt-1 text-sm text-foreground">{obligation.reason}</p>
           </div>
@@ -156,7 +158,7 @@ export function LawGraphPanel({ obligation, onClose }: { obligation: Obligation 
                     <p className="mt-0.5 font-mono text-xs text-muted">{focus.citation}</p>
                     <p className="mt-3 text-sm text-foreground">{focus.excerpt}</p>
                     {focus.url ? (
-                      <a href={focus.url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-medium text-teal underline">
+                      <a href={focus.url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-medium text-primary underline">
                         Open the source ↗
                       </a>
                     ) : (
@@ -345,7 +347,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               y1={s.y ?? 0}
               x2={tg.x ?? 0}
               y2={tg.y ?? 0}
-              stroke={onPath ? C.terracotta : C.muted}
+              stroke={onPath ? C.ink : C.muted}
               strokeWidth={onPath ? 2.5 : 1.3}
               opacity={onPath ? 0.9 : 0.5}
             />
@@ -368,7 +370,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               onPointerLeave={() => setHovered(null)}
             >
               {isFocus && (
-                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill={C.terracotta} opacity={0.25}>
+                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill={C.ink} opacity={0.25}>
                   <animate attributeName="r" values="20;36;20" dur="1.8s" repeatCount="indefinite" />
                 </circle>
               )}
@@ -384,7 +386,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
                 {(n.kind[0] ?? "").toUpperCase()}
               </text>
               {lines.map((line, i) => (
-                <text key={i} x={n.x ?? 0} y={(n.y ?? 0) + r + 13 + i * 11} textAnchor="middle" fontSize={9.5} fill={isFocus ? C.terracottaDark : C.ink} fontWeight={isFocus ? 700 : 400}>
+                <text key={i} x={n.x ?? 0} y={(n.y ?? 0) + r + 13 + i * 11} textAnchor="middle" fontSize={9.5} fill={isFocus ? C.highlightDark : C.ink} fontWeight={isFocus ? 700 : 400}>
                   {line}
                 </text>
               ))}

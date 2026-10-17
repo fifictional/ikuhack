@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { IntakeDraft } from "@/lib/ai/intake";
 import { CATEGORY_LABEL } from "@/lib/ui/labels";
+import { VoiceNoteButton } from "./VoiceNoteButton";
 import { VoiceReport } from "./VoiceReport";
 
 /**
  * Text/photo reporting: describe → Gemini drafts → tenant answers any follow-up questions (in their language)
  * → confirms → case created → photos stored as evidence.
- * TODO(person A): voice-note button (record → /api/transcribe → fills the textarea), accessibility pass, i18n of UI copy.
+ * TODO(person A): accessibility pass, i18n of UI copy.
  */
 
 const URGENCY: Record<IntakeDraft["assessedSeverity"], { label: string; tone: string }> = {
@@ -84,26 +85,27 @@ export function ReportFlow() {
       <div className="flex gap-2 text-sm">
         {(["voice", "type"] as const).map((m) => (
           <button key={m} onClick={() => setMode(m)}
-            className={`rounded-full px-3 py-1 font-medium ${mode === m ? "bg-teal text-white" : "border border-border bg-surface text-ink hover:border-teal"}`}>
+            className={`rounded-full px-3 py-1 font-medium ${mode === m ? "bg-primary text-white" : "border border-border bg-surface text-ink hover:border-primary"}`}>
             {m === "voice" ? "Speak" : "Type & photos"}
           </button>
         ))}
       </div>
 
       {mode === "voice" ? (
-        <VoiceReport />
+        <VoiceReport onFallback={() => setMode("type")} />
       ) : !draft ? (
         <div className="space-y-3">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5}
             placeholder="e.g. Black mould is spreading on the bedroom wall and my baby keeps coughing"
             className="w-full rounded-lg border border-border bg-surface p-3" />
-          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-sm font-medium text-teal hover:border-teal hover:bg-teal-tint">
+          <VoiceNoteButton onText={(t) => setText((prev) => (prev ? `${prev} ${t}` : t))} />
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-sm font-medium text-primary hover:border-primary hover:bg-primary-tint">
             {photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} added — change` : "Add photos (optional)"}
             <input type="file" accept="image/*" multiple capture="environment" className="sr-only"
               onChange={(e) => setPhotos([...(e.target.files ?? [])])} />
           </label>
           <button disabled={busy || (!text && photos.length === 0)} onClick={() => analyse()}
-            className="w-full rounded-lg bg-teal font-semibold text-white hover:bg-teal-dark py-3 disabled:opacity-50">
+            className="w-full rounded-lg bg-primary font-semibold text-white hover:bg-primary-dark py-3 disabled:opacity-50">
             {busy ? "Reading your report…" : "Continue"}
           </button>
         </div>
@@ -134,7 +136,7 @@ export function ReportFlow() {
                 </label>
               ))}
               <button disabled={busy || !Object.values(answers).some((a) => a.trim())} onClick={answerFollowUps}
-                className="w-full rounded-lg border border-teal py-2 font-medium text-teal hover:bg-teal-tint disabled:opacity-40">
+                className="w-full rounded-lg border border-primary py-2 font-medium text-primary hover:bg-primary-tint disabled:opacity-40">
                 {busy ? "Updating…" : "Update with my answers"}
               </button>
             </div>
@@ -142,7 +144,7 @@ export function ReportFlow() {
 
           <div className="flex gap-2">
             <button onClick={() => { setDraft(null); setQaLog([]); }} className="rounded-lg border border-border px-4 py-3">Edit</button>
-            <button disabled={busy} onClick={submit} className="flex-1 rounded-lg bg-teal font-semibold text-white hover:bg-teal-dark py-3 disabled:opacity-50">
+            <button disabled={busy} onClick={submit} className="flex-1 rounded-lg bg-primary font-semibold text-white hover:bg-primary-dark py-3 disabled:opacity-50">
               {busy ? "Logging…" : "Log it with my landlord"}
             </button>
           </div>

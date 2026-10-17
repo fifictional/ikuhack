@@ -1,6 +1,18 @@
-# ElevenLabs agent configuration
+# ElevenLabs voice agent
 
-Create this in the ElevenLabs dashboard → Agents. Keep this file in sync with what's configured.
+## Setup (one command)
+1. Put `ELEVENLABS_API_KEY` in `.env.local`. The key needs these permissions: Agents, Text-to-Speech, Speech-to-Text, User: read.
+2. Run `npm run voice:setup`. This creates the agent from `scripts/setup-voice-agent.ts`, covering prompt, tools, languages and cost limits, and saves `ELEVENLABS_AGENT_ID` to `.env.local`. Re-run it after editing the script to update the agent.
+3. Set `VOICE_ENABLED=true` while testing voice; set it back to `false` when you're done.
+4. Go to `/tenant/report` → **Speak**.
+
+**How it works:**
+- The agent's tools (`report_issue`, `get_case_status`) are **client tools**. The browser runs them against our own API (`/api/voice/report`, `/api/voice/status`), so voice works on `localhost` with no public URL, tunnel or webhook.
+- The live transcript shows on screen, and when the call ends it is saved on the case as evidence.
+- **Voice notes:** the "Record a voice note instead" button on the typed form uses Scribe (`/api/transcribe`), which is cheaper than an agent call.
+- **The agent's LLM is Gemini** (`gemini-3.5-flash`), set in the setup script.
+
+The sections below describe the prompt and settings the script applies. Edit the script, not the dashboard; dashboard edits get overwritten on the next `voice:setup`.
 
 ## Basics
 - **Name:** Docket intake
@@ -30,6 +42,8 @@ Never give legal advice or promise outcomes. Say "Docket will track your landlor
 ```
 
 ## Tools
+
+**Phone line only (stretch):** a Twilio number can't run client tools, so it uses the webhook versions below, which need a public URL.
 
 **report_issue** (webhook, POST `https://<public-url>/api/voice/tools/report-issue`)
 - Header: `x-docket-tool-secret: <DOCKET_TOOL_SECRET>`

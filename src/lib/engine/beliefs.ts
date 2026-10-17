@@ -37,6 +37,8 @@ const RELIABILITY_OVERRIDES: Partial<Record<FactKey, Partial<Record<SourceKind, 
   "appliance.suppliedByLandlord": { tenancy_agreement: 0.95, tenant: 0.5, landlord: 0.55 },
   // Both parties have an interest in who caused the damage.
   "cause.tenantDamage": { contractor: 0.7, landlord: 0.4, tenant: 0.4 },
+  // Whoever did the work is marking their own homework; the tenant lives with the result.
+  "fix.verified": { contractor: 0.55, landlord: 0.45, tenant: 0.85, surveyor: 0.9 },
 };
 
 /** Two beliefs this close in score with different values are a genuine conflict. */
@@ -54,7 +56,16 @@ export function collectBeliefs(events: CaseEvent[]): Belief[] {
     events.filter((e): e is EventOf<"FACT_RETRACTED"> => e.type === "FACT_RETRACTED").map((e) => e.assertionId),
   );
   const latest = new Map<string, Belief>();
+  const put = (b: Belief) => latest.set(`${b.key}|${b.source.kind}|${b.source.ref ?? ""}`, b);
   for (const e of events) {
+    // Workflow events double as claims about whether the fix worked.
+    const fixClaim =
+      e.type === "WORKS_COMPLETED" ? true : e.type === "TENANT_CONFIRMED_FIXED" ? true : e.type === "TENANT_DISPUTED_FIX" ? false : null;
+    if (fixClaim !== null) {
+      const kind = e.actor === "tenant" ? "tenant" : e.actor === "landlord" ? "landlord" : e.actor === "surveyor" ? "surveyor" : "contractor";
+      const rel = reliability(kind, "fix.verified");
+      put({ id: `${e.id}:fix`, key: "fix.verified", value: fixClaim, source: { kind }, confidence: 1, at: e.at, reliability: rel, score: rel, derivedFrom: e.id });
+    }
     if (e.type !== "FACT_ASSERTED" || retracted.has(e.id)) continue;
     const confidence = e.confidence ?? 1;
     const rel = reliability(e.source.kind, e.key);
@@ -67,8 +78,9 @@ export function collectBeliefs(events: CaseEvent[]): Belief[] {
       at: e.at,
       reliability: rel,
       score: rel * confidence,
+      note: e.note,
     };
-    latest.set(`${e.key}|${e.source.kind}|${e.source.ref ?? ""}`, belief);
+    put(belief);
   }
   const beliefs = [...latest.values()];
 
@@ -100,6 +112,10 @@ export function resolveFact(beliefs: Belief[], key: FactKey): ResolvedFact | und
       chosen = [top, ...rivals].reduce((a, b) =>
         severityRank(b.value as Severity) > severityRank(a.value as Severity) ? b : a,
       );
+      conflict = { key, candidates: [top, ...rivals], resolution: "safety_first", chosenId: chosen.id };
+    } else if (key === "fix.verified") {
+      // Safety-first: if credible sources disagree on whether it's fixed, it isn't fixed yet.
+      chosen = [top, ...rivals].find((b) => b.value === false) ?? top;
       conflict = { key, candidates: [top, ...rivals], resolution: "safety_first", chosenId: chosen.id };
     } else {
       conflict = { key, candidates: [top, ...rivals], resolution: "most_reliable", chosenId: top.id };

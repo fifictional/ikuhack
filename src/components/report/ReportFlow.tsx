@@ -85,7 +85,7 @@ export function ReportFlow() {
       <div className="flex gap-2 text-sm">
         {(["voice", "type"] as const).map((m) => (
           <button key={m} onClick={() => setMode(m)}
-            className={`rounded-full px-3 py-1 font-medium ${mode === m ? "bg-teal text-white" : "border border-border bg-surface text-ink hover:border-teal"}`}>
+            className={`rounded-full px-3 py-1 font-medium ${mode === m ? "bg-primary text-white" : "border border-border bg-surface text-ink hover:border-primary"}`}>
             {m === "voice" ? "Speak" : "Type & photos"}
           </button>
         ))}
@@ -99,13 +99,13 @@ export function ReportFlow() {
             placeholder="e.g. Black mould is spreading on the bedroom wall and my baby keeps coughing"
             className="w-full rounded-lg border border-border bg-surface p-3" />
           <VoiceNoteButton onText={(t) => setText((prev) => (prev ? `${prev} ${t}` : t))} />
-          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-sm font-medium text-teal hover:border-teal hover:bg-teal-tint">
+          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-sm font-medium text-primary hover:border-primary hover:bg-primary-tint">
             {photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} added — change` : "Add photos (optional)"}
             <input type="file" accept="image/*" multiple capture="environment" className="sr-only"
               onChange={(e) => setPhotos([...(e.target.files ?? [])])} />
           </label>
           <button disabled={busy || (!text && photos.length === 0)} onClick={() => analyse()}
-            className="w-full rounded-lg bg-teal font-semibold text-white hover:bg-teal-dark py-3 disabled:opacity-50">
+            className="w-full rounded-lg bg-primary font-semibold text-white hover:bg-primary-dark py-3 disabled:opacity-50">
             {busy ? "Reading your report…" : "Continue"}
           </button>
         </div>
@@ -136,7 +136,7 @@ export function ReportFlow() {
                 </label>
               ))}
               <button disabled={busy || !Object.values(answers).some((a) => a.trim())} onClick={answerFollowUps}
-                className="w-full rounded-lg border border-teal py-2 font-medium text-teal hover:bg-teal-tint disabled:opacity-40">
+                className="w-full rounded-lg border border-primary py-2 font-medium text-primary hover:bg-primary-tint disabled:opacity-40">
                 {busy ? "Updating…" : "Update with my answers"}
               </button>
             </div>
@@ -144,7 +144,7 @@ export function ReportFlow() {
 
           <div className="flex gap-2">
             <button onClick={() => { setDraft(null); setQaLog([]); }} className="rounded-lg border border-border px-4 py-3">Edit</button>
-            <button disabled={busy} onClick={submit} className="flex-1 rounded-lg bg-teal font-semibold text-white hover:bg-teal-dark py-3 disabled:opacity-50">
+            <button disabled={busy} onClick={submit} className="flex-1 rounded-lg bg-primary font-semibold text-white hover:bg-primary-dark py-3 disabled:opacity-50">
               {busy ? "Logging…" : "Log it with my landlord"}
             </button>
           </div>

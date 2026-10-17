@@ -71,5 +71,5 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 }
 
 function B(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button {...props} className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm hover:border-teal hover:text-teal disabled:opacity-50" />;
+  return <button {...props} className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm hover:border-primary hover:text-primary disabled:opacity-50" />;
 }

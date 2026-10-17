@@ -27,7 +27,7 @@ export function VerifyForm() {
         <div className={`rounded-xl border p-4 ${result.valid ? "border-ok" : "border-danger"}`}>
           <p className="font-medium">{result.valid ? "✓ Unaltered since it was logged" : "✗ Proof failed"}</p>
           <p className="text-sm text-muted">Anchored {new Date(result.anchoredAt).toLocaleString("en-GB")}</p>
-          {result.url && <a href={result.url} target="_blank" className="text-sm font-medium text-teal underline">View on Solana Explorer</a>}
+          {result.url && <a href={result.url} target="_blank" className="text-sm font-medium text-primary underline">View on Solana Explorer</a>}
         </div>
       )}
     </div>

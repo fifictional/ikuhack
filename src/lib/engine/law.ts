@@ -1,8 +1,9 @@
 import type { Category, LandlordType, Severity } from "@/lib/domain/types";
+import type { SourceId } from "./sources";
 
 /**
- * Every legal number and commencement date lives here, with its source.
- * Anything marked VERIFY must be checked against legislation.gov.uk before the pitch.
+ * Every legal number and commencement date lives here. Each is traced to an entry in sources.ts,
+ * which records the official URL and what was checked (last full check: 17 Oct 2026).
  * The LLM never produces these values.
  */
 
@@ -10,6 +11,8 @@ import type { Category, LandlordType, Severity } from "@/lib/domain/types";
 export type Hazard =
   | "damp_mould"
   | "excess_cold"
+  | "excess_heat"
+  | "falls"
   | "electrical"
   | "explosions"
   | "carbon_monoxide"
@@ -57,17 +60,20 @@ export interface AwaabPhase {
   hazards: Hazard[] | "all";
   severities: Severity[];
   appliesTo: LandlordType[];
-  verify?: string;
+  /** Where this phase's scope and date come from (sources.ts). */
+  sourceIds: SourceId[];
+  /** Caveat to surface, e.g. "subject to Parliamentary approval". */
+  status?: string;
 }
 
 export interface LawConfig {
   awaabPhases: AwaabPhase[];
 }
 
+/** SI 2025/1042: reg 5 (24h), reg 6 (10 working days), reg 9 (3), reg 11 (5). Verified on legislation.gov.uk. */
 export const AWAAB = {
-  citation:
-    "Awaab's Law — LTA 1985 s10A (Social Housing Regulation Act 2023 s42); Hazards in Social Housing (Prescribed Requirements) (England) Regulations 2025",
-  // VERIFY: add the legislation.gov.uk URL, and check all four timescales against the 2025 Regulations.
+  citation: "Awaab's Law: LTA 1985 s10A; Hazards in Social Housing (Prescribed Requirements) (England) Regulations 2025 (SI 2025/1042)",
+  url: "https://www.legislation.gov.uk/uksi/2025/1042/contents/made",
   emergencyHours: 24,
   investigateWorkingDays: 10,
   summaryWorkingDays: 3,
@@ -83,6 +89,7 @@ export const DEFAULT_LAW: LawConfig = {
       hazards: ["damp_mould"],
       severities: ["significant", "emergency"],
       appliesTo: ["social"],
+      sourceIds: ["awaab_regs_2025", "lta1985_s10a"],
     },
     {
       id: "awaab-1-emergency",
@@ -91,24 +98,29 @@ export const DEFAULT_LAW: LawConfig = {
       hazards: "all",
       severities: ["emergency"],
       appliesTo: ["social"],
+      sourceIds: ["awaab_regs_2025", "lta1985_s10a"],
     },
     {
       id: "awaab-2",
       label: "Awaab's Law phase 2 — wider HHSRS hazards",
-      commencesAt: null,
+      // gov.uk Phase 2 guidance: excess cold, excess heat, falls, structural collapse, fire and explosions,
+      // electrical hazards, domestic hygiene (incl. personal hygiene and food safety).
+      commencesAt: "2026-11-30",
       hazards: [
         "excess_cold",
+        "excess_heat",
+        "falls",
         "structural_collapse",
         "explosions",
         "fire",
         "electrical",
         "domestic_hygiene_pests",
         "personal_hygiene_sanitation",
-        "entry_by_intruders",
       ],
       severities: ["significant", "emergency"],
       appliesTo: ["social"],
-      verify: "Hazard list and commencement date for phase 2 — check current government guidance.",
+      sourceIds: ["awaab_phase2_guidance", "awaab_regs_2025"],
+      status: "Amending regulations subject to Parliamentary approval (laid 13 July 2026).",
     },
     {
       id: "awaab-private",
@@ -117,7 +129,8 @@ export const DEFAULT_LAW: LawConfig = {
       hazards: ["damp_mould"],
       severities: ["significant", "emergency"],
       appliesTo: ["private"],
-      verify: "Power exists in the Renters' Rights Act; commencement depends on secondary legislation.",
+      sourceIds: ["lta1985_s10a"],
+      status: "Not in force: extension to private renting is still at consultation stage, so no commencement date.",
     },
   ],
 };

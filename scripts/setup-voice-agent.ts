@@ -28,6 +28,11 @@ When you have the problem and location, call report_issue with a complete descri
 Read back the "message" it returns, in the tenant's language, then ask if there's anything else.
 If they ask about an existing repair, call get_case_status and explain the next deadline in plain words.
 Never give legal advice, promise outcomes or invent deadlines: only repeat what the tools return.
+Corrections: the tenant can fix captions on screen. A message starting "Correction:" means you misheard them; say sorry
+briefly and use the corrected version from then on. If you haven't logged the problem yet, use the corrected details.
+If you already called report_issue, don't call it again for the same problem: tell them the correction is saved with
+their call record.
+Pauses: if told the tenant has paused, say nothing at all until you're told they've resumed.
 When the tenant is done, say goodbye and end the call.`;
 
 const DESCRIPTION_PARAM: ElevenLabs.LiteralJsonSchemaProperty = {
@@ -82,12 +87,15 @@ function conversationConfig(voiceId: string): ElevenLabs.ConversationalConfig {
         },
       } as ElevenLabs.PromptAgentApiModelOutput,
     },
-    // Flash v2.5 is multilingual and the cheapest conversational voice.
-    tts: { modelId: "eleven_flash_v2_5", voiceId },
+    // ElevenLabs requires English agents to use an English-only model (Flash v2, the cheapest);
+    // each other language switches to multilingual Flash v2.5 via its preset below.
+    tts: { modelId: "eleven_flash_v2", voiceId },
     // Credit protection: hang up after 20s of silence and hard-stop at 3 minutes.
     turn: { silenceEndCallTimeout: 20 },
     conversation: { maxDurationSeconds: 180 },
-    languagePresets: Object.fromEntries(LANGUAGES.map((l) => [l, { overrides: { agent: { language: l } } }])),
+    languagePresets: Object.fromEntries(
+      LANGUAGES.map((l) => [l, { overrides: { agent: { language: l }, tts: { modelId: "eleven_flash_v2_5" } } }]),
+    ),
   } as ElevenLabs.ConversationalConfig;
 }
 

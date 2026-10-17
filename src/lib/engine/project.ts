@@ -1,7 +1,7 @@
 import type { CaseEvent, CaseState, EscalationRoute, LandlordType } from "@/lib/domain/types";
 import { resolveFacts } from "./beliefs";
 import { type LawConfig } from "./law";
-import { deriveObligations, validCompletionAt } from "./rules";
+import { deriveObligations, effectiveCompletionAt } from "./rules";
 
 export interface ProjectOptions {
   now: Date;
@@ -35,7 +35,7 @@ export function project(caseId: string, events: CaseEvent[], opts: ProjectOption
   const conflicts = Object.values(facts).flatMap((f) => (f?.conflict ? [f.conflict] : []));
 
   const has = (t: CaseEvent["type"]) => visible.some((e) => e.type === t);
-  const completed = validCompletionAt(visible);
+  const completed = effectiveCompletionAt(visible, facts);
   const phase: CaseState["phase"] = has("CLOSED")
     ? "closed"
     : completed && has("TENANT_CONFIRMED_FIXED")

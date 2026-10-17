@@ -19,7 +19,10 @@ export const env = {
   },
   get GEMINI_THINKING() { return process.env.GEMINI_THINKING || "LOW"; },
   get ELEVENLABS_API_KEY() { return required("ELEVENLABS_API_KEY"); },
-  get ELEVENLABS_AGENT_ID() { return required("ELEVENLABS_AGENT_ID"); },
+  get ELEVENLABS_AGENT_ID() {
+    if (!process.env.ELEVENLABS_AGENT_ID) throw new Error("No voice agent yet: run `npm run voice:setup` to create it (see docs/VOICE_AGENT.md)");
+    return process.env.ELEVENLABS_AGENT_ID;
+  },
   get ELEVENLABS_WEBHOOK_SECRET() { return required("ELEVENLABS_WEBHOOK_SECRET"); },
   get ELEVENLABS_VOICE_ID() { return process.env.ELEVENLABS_VOICE_ID ?? "JBFqnCBsd6RMkjVDRZzb"; },
   get DOCKET_TOOL_SECRET() { return required("DOCKET_TOOL_SECRET"); },

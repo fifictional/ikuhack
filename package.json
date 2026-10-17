@@ -15,7 +15,8 @@
     "sensors:simulate": "tsx scripts/simulate-sensors.ts",
     "solana:keygen": "tsx scripts/solana-keygen.ts",
     "eval:intake": "tsx scripts/eval-intake.ts",
-    "voice:setup": "tsx scripts/setup-voice-agent.ts"
+    "voice:setup": "tsx scripts/setup-voice-agent.ts",
+    "demo:photos": "tsx scripts/make-demo-photos.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.73.0",

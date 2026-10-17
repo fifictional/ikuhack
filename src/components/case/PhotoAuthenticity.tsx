@@ -9,7 +9,7 @@ type Report = {
 };
 
 const VERDICT: Record<Report["verdict"], { text: string; cls: string }> = {
-  no_concerns: { text: "No signs of tampering", cls: "border-teal bg-teal-tint text-ink" },
+  no_concerns: { text: "No signs of tampering", cls: "border-primary bg-primary-tint text-ink" },
   unverified: { text: "Can't verify: no camera data", cls: "border-border bg-surface text-ink" },
   needs_review: { text: "Worth a closer look", cls: "border-warn text-warn" },
   likely_manipulated: { text: "Likely edited or AI-made", cls: "border-danger text-danger" },
@@ -48,7 +48,7 @@ export function PhotoAuthenticity({ evidenceId, caption }: { evidenceId: string;
           {caption && <p className="truncate text-sm">{caption}</p>}
           {v ? <p className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${v.cls}`}>{v.text}</p> : null}
           <div>
-            <button onClick={run} disabled={busy} className="rounded-lg border border-teal px-2 py-1 text-xs font-medium text-teal hover:bg-teal-tint disabled:opacity-60">
+            <button onClick={run} disabled={busy} className="rounded-lg border border-primary px-2 py-1 text-xs font-medium text-primary hover:bg-primary-tint disabled:opacity-60">
               {busy ? "Checking…" : report ? "Re-check" : "Check authenticity"}
             </button>
           </div>

@@ -24,7 +24,7 @@ export const env = {
     return process.env.ELEVENLABS_AGENT_ID;
   },
   get ELEVENLABS_WEBHOOK_SECRET() { return required("ELEVENLABS_WEBHOOK_SECRET"); },
-  get ELEVENLABS_VOICE_ID() { return process.env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb"; },
+  get ELEVENLABS_VOICE_ID() { return process.env.ELEVENLABS_VOICE_ID || "Xb7hH8MSUJpSbSDYk0k2"; },
   get DOCKET_TOOL_SECRET() { return required("DOCKET_TOOL_SECRET"); },
   get SOLANA_RPC_URL() { return process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com"; },
   get SOLANA_CLUSTER() { return process.env.SOLANA_CLUSTER ?? "devnet"; },

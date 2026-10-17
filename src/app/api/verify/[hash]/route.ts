@@ -5,5 +5,5 @@ import { verifyLeaf } from "@/lib/solana/anchor";
 export const GET = handle(async (_req: Request, { params }: { params: Promise<{ hash: string }> }) => {
   const { hash } = await params;
   if (!/^[0-9a-f]{64}$/.test(hash)) return Response.json({ error: "expected a sha256 hex string" }, { status: 400 });
-  return Response.json(await verifyLeaf(hash));
+  return Response.json(await verifyLeaf(hash, { onChain: true }));
 });

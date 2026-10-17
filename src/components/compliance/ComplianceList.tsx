@@ -1,5 +1,6 @@
 import type { ComplianceDuty } from "@/lib/compliance/duties";
 import { fmtDateTime } from "@/lib/ui/labels";
+import { CopySentButton } from "./ComplianceActions";
 
 const TONE = { breached: "text-danger", open: "text-warn", met: "text-ok" } as const;
 const LABEL = { breached: "Breached", open: "Due", met: "Met" } as const;
@@ -38,6 +39,7 @@ export function ComplianceList({ duties }: { duties: ComplianceDuty[] }) {
             <div className="shrink-0 text-right">
               <span className={`text-sm font-medium ${TONE[d.status]}`}>{LABEL[d.status]}</span>
               <p className="text-xs text-muted">{fmtDateTime(d.dueAt)}</p>
+              {d.id.endsWith(":copy") && d.status !== "met" && <div className="mt-1"><CopySentButton propertyId={d.propertyId} kind={d.kind} /></div>}
             </div>
           </li>
         ))}

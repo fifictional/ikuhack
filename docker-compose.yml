@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: docket
       POSTGRES_DB: docket
     ports:
-      - "5432:5432"
+      - "${DOCKET_DB_PORT:-5432}:5432"
     volumes:
       - docket-db:/var/lib/postgresql/data
 volumes:

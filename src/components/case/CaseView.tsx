@@ -7,6 +7,7 @@ import { Countdown } from "./Countdown";
 import { PhotoAuthenticity } from "./PhotoAuthenticity";
 import { ListenButton } from "./ListenButton";
 import { LandlordActions } from "./LandlordActions";
+import { BeliefTimeline } from "./BeliefTimeline";
 import { ObligationList } from "./ObligationList";
 import { TenantActions } from "./TenantActions";
 
@@ -80,6 +81,16 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               </li>
             ))}
           </ul>
+        </Section>
+
+        <Section title="What Docket believed at the time">
+          <BeliefTimeline
+            caseId={caseId}
+            now={s.computedAt}
+            openedAt={s.openedAt}
+            revisions={c.revisions.map((r) => ({ at: r.at.toISOString() }))}
+            landlordName={c.landlord_name}
+          />
         </Section>
 
         <Section title="Full record">

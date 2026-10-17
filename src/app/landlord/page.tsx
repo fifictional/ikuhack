@@ -45,7 +45,6 @@ async function Portfolio() {
         <Stat label="Due in 24h" value={dueToday} tone={dueToday ? "warn" : undefined} />
         <Stat label="Met on time" value={`${onTime}%`} />
       </div>
-      <ComplianceList duties={compliance} />
       <section className="space-y-3">
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Repair cases</h2>
@@ -53,6 +52,7 @@ async function Portfolio() {
         </div>
         <CaseList cases={cases} hrefBase="/landlord/cases" party="landlord" now={now.toISOString()} />
       </section>
+      <ComplianceList duties={compliance} />
     </div>
   );
 }

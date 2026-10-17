@@ -140,6 +140,14 @@ async function main() {
     platformSettings: {
       // Only our server can start sessions (signed URL), so a leaked agent id can't spend credits.
       auth: { enableAuth: true },
+      // The browser sets the call's language, greeting and voice at the start (see CALL_LANGUAGES), so the call
+      // runs with the right speech recognition and voice from the first word.
+      overrides: {
+        conversationConfigOverride: {
+          agent: { language: true, firstMessage: true },
+          tts: { voiceId: true, stability: true, similarityBoost: true, speed: true },
+        },
+      },
       callLimits: { dailyLimit: Number(process.env.ELEVENLABS_MAX_SESSIONS_PER_DAY ?? 20) },
     },
   };

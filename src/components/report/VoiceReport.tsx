@@ -3,6 +3,7 @@
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { CALL_LANGUAGES, type CallLanguageCode } from "@/lib/voice/languages";
 
 /** Hard stop for a single call, as a backstop to the agent's max-duration setting (credits are billed per minute). */
 const MAX_CALL_MS = 3 * 60_000;
@@ -149,18 +150,27 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
     }
   }
 
+  const [language, setLanguage] = useState<CallLanguageCode>("en");
+
   async function start() {
     setError(null);
     setSaved("no");
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       const res = await fetch("/api/voice/signed-url");
-      const { signedUrl, error } = await res.json();
+      const { signedUrl, voices, error } = await res.json();
       if (!res.ok) throw new Error(error);
+      const pick = CALL_LANGUAGES.find((l) => l.code === language);
       caseRef.current = null;
       setAllLines([]);
       setCaseId(null);
-      conversation.startSession({ signedUrl });
+      conversation.startSession({
+        signedUrl,
+        // A chosen language sets recognition, voice and greeting for the whole call; "Any language" keeps the default.
+        overrides: pick && pick.code !== "auto"
+          ? { agent: { language: pick.code, firstMessage: pick.greeting }, ...(voices?.[pick.code] ? { tts: { voiceId: voices[pick.code] } } : {}) }
+          : undefined,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -169,6 +179,21 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
   return (
     <div className="space-y-4 rounded-xl border border-border bg-surface p-6">
       <div className="text-center">
+        {!live && !connecting && (
+          <div role="radiogroup" aria-label="Call language" className="mb-4 flex flex-wrap justify-center gap-2">
+            {CALL_LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                role="radio"
+                aria-checked={language === l.code}
+                onClick={() => setLanguage(l.code)}
+                className={`rounded-full border px-3 py-1 text-sm ${language === l.code ? "border-primary bg-primary text-white" : "border-border bg-surface hover:border-primary"}`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        )}
         <button
           onClick={live ? endSession : start}
           disabled={connecting}
@@ -181,7 +206,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
         </button>
         <p className="mt-3 text-sm text-muted" aria-live="polite">
           {!live
-            ? "Speak in any language. Tell us what's wrong and where."
+            ? language === "auto" ? "Speak in any language. Tell us what's wrong and where." : "Tap and tell us what's wrong and where."
             : paused
               ? "Paused: your microphone is off. Tap Resume when you're ready."
               : conversation.isSpeaking

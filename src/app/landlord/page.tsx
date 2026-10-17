@@ -37,7 +37,6 @@ async function Portfolio() {
   const closed = obligations.filter((o) => o.status === "met" || o.status === "met_late");
   const onTime = closed.length ? Math.round((closed.filter((o) => o.status === "met").length / closed.length) * 100) : 100;
 
-  // TODO(person B): sensor chart per property (GET /api/sensors) and breach trend from case_revisions.
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

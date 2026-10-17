@@ -58,7 +58,8 @@ async function main() {
       `${mark(Object.values(ok).every(Boolean))} ${f.text.slice(0, 48).padEnd(48)} ` +
         `cat ${mark(ok.category)} ${d.category.padEnd(17)} sev ${mark(ok.severity)} ${severity.padEnd(11)} ` +
         `vuln ${mark(ok.vulnerable)} lang ${mark(ok.language)} ${d.detectedLanguage} ${r.ms}ms` +
-        (under ? "  ⚠ UNDER-RATED" : ""),
+        (under ? "  ⚠ UNDER-RATED" : "") +
+        (model && d._model !== model ? `  (answered by fallback ${d._model})` : ""),
     );
   }
   const n = INTAKE_FIXTURES.length;

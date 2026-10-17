@@ -13,7 +13,9 @@ export const env = {
   get GEMINI_API_KEY() { return required("GEMINI_API_KEY"); },
   get GEMINI_MODEL() { return process.env.GEMINI_MODEL || "gemini-3.8-flash"; },
   get GEMINI_FALLBACK_MODELS() {
-    return (process.env.GEMINI_FALLBACK_MODELS ?? "gemini-3.5-flash,gemini-3.1-flash-lite").split(",").map((m) => m.trim()).filter(Boolean);
+    // The default model is always the last resort, so a bad GEMINI_MODEL setting can't take intake down.
+    const list = (process.env.GEMINI_FALLBACK_MODELS ?? "gemini-3.5-flash,gemini-3.1-flash-lite").split(",").map((m) => m.trim()).filter(Boolean);
+    return [...list, "gemini-3.8-flash"];
   },
   get GEMINI_THINKING() { return process.env.GEMINI_THINKING || "LOW"; },
   get ELEVENLABS_API_KEY() { return required("ELEVENLABS_API_KEY"); },

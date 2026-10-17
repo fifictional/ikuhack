@@ -54,6 +54,11 @@ export async function generateStructured<T extends z.ZodType>(opts: {
       } catch (err) {
         lastError = err;
         const status = err instanceof ApiError ? err.status : 0;
+        // Retired/unknown model (e.g. a stale GEMINI_MODEL in .env.local): skip straight to the next one.
+        if (status === 404) {
+          console.warn(`Gemini model "${model}" not available — falling back. Check GEMINI_MODEL in .env.local.`);
+          break;
+        }
         if (!RETRYABLE.has(status)) throw err;
         if (attempt === 0) await sleep(1500);
       }

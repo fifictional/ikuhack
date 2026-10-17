@@ -5,6 +5,7 @@ import type { Category, Obligation, Severity } from "@/lib/domain/types";
 import { CATEGORY_LABEL, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, fmtDateTime, plainDuty } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
 import { LandlordActions } from "./LandlordActions";
+import { ObligationList } from "./ObligationList";
 import { TenantActions } from "./TenantActions";
 
 /**
@@ -44,11 +45,11 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
 
         <Section title={role === "tenant" ? "Everything that's due" : "Who must do what, by when"}>
           {open.length === 0 && <p className="text-sm text-muted">Nothing is due right now.</p>}
-          {open.map((o) => <ObligationRow key={o.id} o={o} now={s.computedAt} role={role} landlordName={c.landlord_name} />)}
+          <ObligationList obligations={open} now={s.computedAt} role={role} landlordName={c.landlord_name} />
           {done.length > 0 && (
             <details className="text-sm">
               <summary className="cursor-pointer py-2 text-muted">{done.length} done</summary>
-              {done.map((o) => <ObligationRow key={o.id} o={o} now={s.computedAt} role={role} landlordName={c.landlord_name} />)}
+              <ObligationList obligations={done} now={s.computedAt} role={role} landlordName={c.landlord_name} />
             </details>
           )}
         </Section>
@@ -114,42 +115,6 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           </a>
         </Section>
       </aside>
-    </div>
-  );
-}
-
-function ObligationRow({ o, now, role, landlordName }: { o: Obligation; now: string; role: "tenant" | "landlord"; landlordName: string }) {
-  const kind = o.legalBasis.statutory ? "Legal duty" : "Docket target (not a legal deadline)";
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-0">
-      <div className="min-w-0">
-        <p className="text-sm font-medium">
-          {role === "tenant" ? (
-            plainDuty(o, landlordName)
-          ) : (
-            <><span className="mr-2 text-xs uppercase text-muted">{o.party}</span>{o.title}</>
-          )}
-          {o.provisional && <span className="ml-2 text-xs text-warn">{role === "tenant" ? "being checked" : "provisional"}</span>}
-        </p>
-        {role === "tenant" ? (
-          <details className="text-xs text-muted">
-            <summary className="cursor-pointer py-1">{kind} · why?</summary>
-            <p>{o.reason}</p>
-            <p className="mt-1">{o.legalBasis.citation}</p>
-          </details>
-        ) : (
-          <p className="text-xs text-muted">{kind} · {o.legalBasis.citation}</p>
-        )}
-        {o.pausedMs > 0 && <p className="text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>}
-      </div>
-      <div className="shrink-0 text-right">
-        {o.status === "open" || o.status === "breached" ? (
-          <Countdown dueAt={o.dueAt} serverNow={now} />
-        ) : (
-          <span className="text-sm text-ok">{o.status === "met" ? "Done on time" : "Done late"}</span>
-        )}
-        <p className="text-xs text-muted">{fmtDateTime(o.dueAt)}</p>
-      </div>
     </div>
   );
 }

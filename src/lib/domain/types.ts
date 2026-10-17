@@ -187,6 +187,8 @@ export interface LegalBasis {
   /** false = Docket service standard / target, not a legal deadline. Never blur these in the UI. */
   statutory: boolean;
   url?: string;
+  /** Node id in the legal knowledge graph (src/lib/law/sources.ts / Neo4j). */
+  sourceId?: string;
 }
 
 export type ObligationStatus = "open" | "met" | "met_late" | "breached";

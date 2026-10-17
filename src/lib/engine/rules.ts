@@ -141,7 +141,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
     id: "landlord.acknowledge",
     party: "landlord",
     title: "Acknowledge the report",
-    legalBasis: { citation: "Docket service standard", statutory: false },
+    legalBasis: { citation: "Docket service standard", statutory: false, sourceId: "docket-standard" },
     start: noticeAt,
     due: addWorkingDays(noticeAt, DOCKET_TARGETS.acknowledgeWorkingDays),
     metAt: firstAt(events, "ACKNOWLEDGED"),
@@ -180,7 +180,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
         id: "tenant.remedy_damage",
         party: "tenant",
         title: "Put right damage caused by the household",
-        legalBasis: { citation: "Duty to use the property in a tenant-like manner (Warren v Keen [1954])", statutory: false },
+        legalBasis: { citation: "Duty to use the property in a tenant-like manner (Warren v Keen [1954])", statutory: false, sourceId: "warren-v-keen" },
         start: new Date(tenantDamage.belief.at),
         due: addCalendarDays(new Date(tenantDamage.belief.at), DOCKET_TARGETS.routineCalendarDays),
         metAt: completion,
@@ -196,7 +196,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
           id: "contract.appliance_repair",
           party: "landlord",
           title: "Repair landlord-supplied appliance",
-          legalBasis: { citation: "Tenancy agreement — landlord-supplied appliances", statutory: false },
+          legalBasis: { citation: "Tenancy agreement — landlord-supplied appliances", statutory: false, sourceId: "tenancy-agreement" },
           start: noticeAt,
           due: dueBySeverity(noticeAt, effectiveSeverity),
           metAt: completion,
@@ -215,6 +215,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
         legalBasis: {
           citation: "Smoke and Carbon Monoxide Alarm (Amendment) Regulations 2022 — as soon as reasonably practicable",
           statutory: true,
+          sourceId: "smoke-co-2022-repair",
         },
         start: noticeAt,
         due: addHours(noticeAt, DOCKET_TARGETS.emergencyHours),
@@ -230,8 +231,8 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
         party: "landlord",
         title: s11 ? "Repair (structure, exterior or installations)" : "Make the home fit for human habitation",
         legalBasis: s11
-          ? { citation: "Landlord and Tenant Act 1985 s11 — repair within a reasonable time of notice", statutory: true }
-          : { citation: "Landlord and Tenant Act 1985 s9A — fitness for human habitation (HHSRS hazards)", statutory: true },
+          ? { citation: "Landlord and Tenant Act 1985 s11 — repair within a reasonable time of notice", statutory: true, sourceId: "lta-1985-s11-repair" }
+          : { citation: "Landlord and Tenant Act 1985 s9A — fitness for human habitation (HHSRS hazards)", statutory: true, sourceId: "lta-1985-s9a-fitness" },
         start: noticeAt,
         due: dueBySeverity(noticeAt, effectiveSeverity),
         metAt: completion,
@@ -255,7 +256,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
           id: "awaab.emergency",
           party: "landlord",
           title: "Investigate and make safe (emergency hazard)",
-          legalBasis,
+          legalBasis: { ...legalBasis, sourceId: "awaab-2025-emergency" },
           start,
           due: addHours(start, AWAAB.emergencyHours),
           metAt: firstAt(events, "MADE_SAFE", "WORKS_COMPLETED"),
@@ -269,7 +270,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
           id: "awaab.investigate",
           party: "landlord",
           title: "Investigate the hazard",
-          legalBasis,
+          legalBasis: { ...legalBasis, sourceId: "awaab-2025-investigate" },
           start,
           due: addWorkingDays(start, AWAAB.investigateWorkingDays),
           metAt: investigatedAt,
@@ -283,7 +284,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
             id: "awaab.summary",
             party: "landlord",
             title: "Send the tenant a written summary of the investigation",
-            legalBasis,
+            legalBasis: { ...legalBasis, sourceId: "awaab-2025-summary" },
             start: inv,
             due: addWorkingDays(inv, AWAAB.summaryWorkingDays),
             metAt: firstAt(events, "SUMMARY_SENT"),
@@ -294,7 +295,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
             id: "awaab.start_works",
             party: "landlord",
             title: "Begin safety works",
-            legalBasis,
+            legalBasis: { ...legalBasis, sourceId: "awaab-2025-works" },
             start: inv,
             due: addWorkingDays(inv, AWAAB.startWorksWorkingDays),
             metAt: firstAt(events, "WORKS_STARTED", "WORKS_COMPLETED"),
@@ -313,7 +314,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
     const slot = new Date(p.slotStart);
     const noticeHours = (slot.getTime() - new Date(p.at).getTime()) / 3_600_000;
     const outcome = outcomes.find((o) => o.proposalId === p.id);
-    const accessBasis = { citation: "Landlord and Tenant Act 1985 s11(6) — access on 24 hours' written notice", statutory: true };
+    const accessBasis = { citation: "Landlord and Tenant Act 1985 s11(6) — access on 24 hours' written notice", statutory: true, sourceId: "lta-1985-s11-6-access" };
     if (noticeHours >= ACCESS_NOTICE_HOURS || effectiveSeverity === "emergency") {
       make({
         id: `tenant.allow_access:${p.id}`,
@@ -334,7 +335,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
       id: `landlord.attend:${p.id}`,
       party: "landlord",
       title: "Attend the booked appointment",
-      legalBasis: { citation: "Docket service standard", statutory: false },
+      legalBasis: { citation: "Docket service standard", statutory: false, sourceId: "docket-standard" },
       start: new Date(p.at),
       due: slot,
       metAt: outcome?.outcome === "completed" || outcome?.outcome === "tenant_no_access" ? outcome.at : undefined,
@@ -351,7 +352,7 @@ export function deriveObligations(ctx: RuleContext): RuleOutput {
       id: "protocol.landlord_response",
       party: "landlord",
       title: "Respond to the letter of claim",
-      legalBasis: { citation: "Pre-Action Protocol for Housing Conditions Claims (England)", statutory: true },
+      legalBasis: { citation: "Pre-Action Protocol for Housing Conditions Claims (England)", statutory: true, sourceId: "pre-action-protocol" },
       start: new Date(letter.at),
       due: addWorkingDays(new Date(letter.at), PRE_ACTION_RESPONSE_WORKING_DAYS),
       metAt: firstAt(events, "PROTOCOL_RESPONSE"),

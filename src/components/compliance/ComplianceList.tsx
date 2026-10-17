@@ -14,12 +14,15 @@ export function ComplianceList({ duties }: { duties: ComplianceDuty[] }) {
 
   return (
     <section className="space-y-3 rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Statutory compliance</h2>
-        <span className={`text-xs font-medium ${breached ? "text-danger" : "text-ok"}`}>
-          {breached ? `${breached} breach${breached === 1 ? "" : "es"}` : "No breaches"}
-          {met > 0 && <span className="text-muted"> · {met} up to date</span>}
-        </span>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Certificates &amp; safety checks</h2>
+          <span className={`text-xs font-medium ${breached ? "text-danger" : "text-ok"}`}>
+            {breached ? `${breached} breach${breached === 1 ? "" : "es"}` : "No breaches"}
+            {met > 0 && <span className="text-muted"> · {met} up to date</span>}
+          </span>
+        </div>
+        <p className="text-xs text-muted">Gas, electrical and the 28-day copy — whether or not a repair is reported.</p>
       </div>
       <ul className="divide-y divide-border">
         {outstanding.map((d) => (

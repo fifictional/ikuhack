@@ -1,5 +1,6 @@
-import Link from "next/link";
-import { LogoMark } from "@/components/brand/Logo";
+import { HeroLogo } from "@/components/brand/HeroLogo";
+import { LogoWalkthrough } from "@/components/brand/LogoWalkthrough";
+import { WalkThroughLink } from "@/components/brand/WalkThroughLink";
 
 export default function Home() {
   return (
@@ -13,23 +14,25 @@ export default function Home() {
             Report a problem in seconds, by voice in any language or with a photo. Docket works out who is responsible
             and the legal deadline, tracks both sides, and keeps evidence neither side can rewrite.
           </p>
-          <Link href="/tenant/report" className="inline-block rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-dark">
+          <WalkThroughLink href="/tenant/report" className="inline-block rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-dark">
             Report a problem
-          </Link>
+          </WalkThroughLink>
         </div>
-        <LogoMark size={120} className="shrink-0" />
+        <HeroLogo size={120} className="shrink-0" />
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link href="/tenant" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
+        <WalkThroughLink href="/tenant" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
           <h2 className="text-lg font-bold group-hover:text-primary">I&apos;m a tenant</h2>
           <p className="mt-1 text-sm text-muted">Report a repair, see your landlord&apos;s deadline, and escalate if it&apos;s missed.</p>
-        </Link>
-        <Link href="/landlord" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
+        </WalkThroughLink>
+        <WalkThroughLink href="/landlord" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
           <h2 className="text-lg font-bold group-hover:text-primary">I&apos;m a landlord</h2>
           <p className="mt-1 text-sm text-muted">Live statutory clocks across your homes, with an audit trail that proves compliance.</p>
-        </Link>
+        </WalkThroughLink>
       </div>
+
+      <LogoWalkthrough />
     </div>
   );
 }

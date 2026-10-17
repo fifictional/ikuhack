@@ -68,7 +68,16 @@ const tools: ElevenLabs.PromptAgentApiModelOutputToolsItem[] = [
 ];
 
 // Languages common among UK social-housing tenants that Turbo v2.5 supports.
-const LANGUAGES = ["pl", "ar", "ro", "es", "pt", "tr", "uk", "hi"];
+const LANGUAGES = ["pl", "ar", "ro", "es", "pt", "tr", "uk", "hi", "ru"];
+
+// Russian gets Eleven v3 Conversational and its own native-sounding library voice. Override with the env vars below.
+// Thai is NOT an agent language (the API rejects it), so Thai reports come through voice notes (Scribe) and the
+// Listen button (Eleven v3, see src/lib/voice/elevenlabs.ts); its voice is still added to the account here.
+const V3_LANGUAGES: Record<string, { voiceId: string; env: string }> = {
+  th: { voiceId: "FaUQoAqt8WX5mfvrvb3A", env: "ELEVENLABS_VOICE_ID_TH" }, // Preecha: patient, friendly, clear
+  ru: { voiceId: "CsT9glYAgw8L02hu9od2", env: "ELEVENLABS_VOICE_ID_RU" }, // Marina: warm, expressive
+};
+const v3Voice = (lang: string) => process.env[V3_LANGUAGES[lang].env] || V3_LANGUAGES[lang].voiceId;
 
 function conversationConfig(voiceId: string): ElevenLabs.ConversationalConfig {
   return {
@@ -94,14 +103,33 @@ function conversationConfig(voiceId: string): ElevenLabs.ConversationalConfig {
     // Credit protection: hang up after 20s of silence and hard-stop at 3 minutes.
     turn: { silenceEndCallTimeout: 20 },
     conversation: { maxDurationSeconds: 180 },
-    languagePresets: Object.fromEntries(
-      LANGUAGES.map((l) => [l, { overrides: { agent: { language: l }, tts: { modelId: "eleven_turbo_v2_5" } } }]),
-    ),
+    languagePresets: Object.fromEntries([
+      ...LANGUAGES.filter((l) => !(l in V3_LANGUAGES)).map((l) => [l, { overrides: { agent: { language: l }, tts: { modelId: "eleven_turbo_v2_5" } } }]),
+      ...Object.keys(V3_LANGUAGES).filter((l) => LANGUAGES.includes(l)).map((l) => [l, { overrides: { agent: { language: l }, tts: { modelId: "eleven_v3_conversational", voiceId: v3Voice(l) } } }]),
+    ]),
   } as ElevenLabs.ConversationalConfig;
+}
+
+/** Library voices must be in the account's own voices before an agent can use them. */
+async function ensureLibraryVoices(client: ReturnType<typeof elevenlabs>) {
+  for (const lang of Object.keys(V3_LANGUAGES)) {
+    const voiceId = v3Voice(lang);
+    const mine = await client.voices.search({ pageSize: 100 }).catch(() => null);
+    if (mine?.voices.some((v) => v.voiceId === voiceId)) continue;
+    const shared = await client.voices.getShared({ pageSize: 100, language: lang } as never);
+    const found = shared.voices.find((v) => v.voiceId === voiceId);
+    if (!found) {
+      console.warn(`! ${lang}: voice ${voiceId} isn't in your account or the library for this language; add it in the ElevenLabs voice library.`);
+      continue;
+    }
+    await client.voices.share(found.publicOwnerId, voiceId, { newName: found.name });
+    console.log(`+ added ${lang} voice "${found.name}" to your account`);
+  }
 }
 
 async function main() {
   const client = elevenlabs();
+  await ensureLibraryVoices(client);
   const voiceId = process.env.ELEVENLABS_VOICE_ID || "Xb7hH8MSUJpSbSDYk0k2";
   const body = {
     name: "Docket intake",

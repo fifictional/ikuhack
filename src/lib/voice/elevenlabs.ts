@@ -39,15 +39,23 @@ export async function transcribe(file: Blob): Promise<{ text: string; languageCo
 const TTS_MODEL = "eleven_flash_v2_5";
 export const MAX_TTS_CHARS = 600;
 
-/** Text → MP3 bytes, served from cache when the exact same text was spoken before. */
-export async function speak(text: string): Promise<Uint8Array> {
+// Flash v2.5 has no Thai, so Thai is read with Eleven v3 (more credits per character) and a Thai voice.
+const THAI_MODEL = "eleven_v3";
+const THAI_VOICE_ID = () => process.env.ELEVENLABS_VOICE_ID_TH || "FaUQoAqt8WX5mfvrvb3A";
+
+/** Text → MP3 bytes, served from cache when the exact same text was spoken before. `lang` is an ISO code like "th". */
+export async function speak(text: string, lang?: string | null): Promise<Uint8Array> {
+  const thai = lang?.toLowerCase().startsWith("th") ?? false;
+  const model = thai ? THAI_MODEL : TTS_MODEL;
+  const voiceId = thai ? THAI_VOICE_ID() : env.ELEVENLABS_VOICE_ID;
   const clipped = text.slice(0, MAX_TTS_CHARS);
-  const key = sha256Hex(`${env.ELEVENLABS_VOICE_ID}|${TTS_MODEL}|${clipped}`);
+  const key = sha256Hex(`${voiceId}|${model}|${clipped}`);
   const [hit] = await db()`SELECT audio FROM tts_cache WHERE key = ${key}`;
   if (hit) return new Uint8Array(hit.audio);
 
-  await guardVoice("tts", clipped.length);
-  const stream = await elevenlabs().textToSpeech.convert(env.ELEVENLABS_VOICE_ID, { text: clipped, modelId: TTS_MODEL });
+  // v3 is billed at roughly double Flash per character; estimate high so the reserve is respected.
+  await guardVoice("tts", thai ? clipped.length * 2 : clipped.length);
+  const stream = await elevenlabs().textToSpeech.convert(voiceId, { text: clipped, modelId: model });
   const audio = new Uint8Array(await new Response(stream).arrayBuffer());
   await db()`INSERT INTO tts_cache (key, audio, chars) VALUES (${key}, ${Buffer.from(audio)}, ${clipped.length})
              ON CONFLICT (key) DO NOTHING`;

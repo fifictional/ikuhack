@@ -21,5 +21,5 @@ export const POST = handle(async (req: Request) => {
     lang = row?.preferred_language ?? null;
   }
   const spoken = await translateForTenant(text, lang);
-  return new Response(Buffer.from(await speak(spoken)), { headers: { "content-type": "audio/mpeg" } });
+  return new Response(Buffer.from(await speak(spoken, lang)), { headers: { "content-type": "audio/mpeg" } });
 });

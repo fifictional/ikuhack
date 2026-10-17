@@ -21,7 +21,7 @@ Pillars to pitch against: transparency, convenience, price, speed, coverage.
 - **Time travel:** all "now" comes from `getNow()` (`src/lib/db/settings.ts`), which applies a demo clock offset. Law commencement overrides also live in `app_settings`. `/demo` drives both.
 - **Integrations:**
   - Tiger Data: `db/migrations/*.sql` (hypertables: `case_events`, `case_revisions`, `sensor_readings`; continuous aggregate `sensor_hourly`). postgres.js client in `src/lib/db/client.ts`.
-  - ElevenLabs: `src/lib/voice/elevenlabs.ts`. Agent configured in the dashboard per `docs/VOICE_AGENT.md`; it calls `/api/voice/tools/*` (header `x-docket-tool-secret`). Browser uses `@elevenlabs/react` with a signed URL.
+  - ElevenLabs: `src/lib/voice/elevenlabs.ts`. **Every paid call must go through `guardVoice()` (`src/lib/voice/budget.ts`)**, which enforces the credit reserve, daily session cap and `VOICE_ENABLED` kill switch. TTS is cached in `tts_cache`. Agent configured in the dashboard per `docs/VOICE_AGENT.md`; it calls `/api/voice/tools/*` (header `x-docket-tool-secret`). Browser uses `@elevenlabs/react` with a signed URL.
   - Solana: `src/lib/solana/anchor.ts` — Merkle root of evidence hashes + case-log heads written as a memo on **devnet only**. `/verify` checks a file against it.
 - **Auth:** none yet — tenant/landlord views use fixed demo ids in `src/lib/demo.ts`. Don't build features that assume real auth.
 
@@ -43,6 +43,10 @@ npm run typecheck
 npm run sensors:simulate   # 14 days of damp readings for the hero flat
 npm run solana:keygen      # devnet keypair → .env.local + airdrop
 ```
+
+## Machine gotcha
+
+The repo lives under `~/Documents`, which iCloud Drive syncs. If iCloud offloads files in `node_modules` or `.next`, every Node tool (tsx, next build, eslint) hangs at near-zero CPU while macOS re-downloads them. Check with `find node_modules -flags +dataless | head`. Fix: keep the repo outside iCloud-synced folders.
 
 ## Conventions
 

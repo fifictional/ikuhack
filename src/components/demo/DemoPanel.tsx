@@ -50,6 +50,12 @@ export function DemoPanel() {
       <Group title="Evidence (Solana devnet)">
         <B disabled={busy} onClick={() => run("anchor", "/api/anchor")}>Anchor new evidence now</B>
       </Group>
+      <Group title="ElevenLabs credits">
+        <B disabled={busy} onClick={async () => {
+          const u = await (await fetch("/api/voice/usage")).json();
+          setLog((l) => [`voice usage: ${JSON.stringify(u)}`, ...l]);
+        }}>Check remaining credits</B>
+      </Group>
       <pre className="md:col-span-2 max-h-80 overflow-auto rounded-xl border border-border bg-surface p-4 text-xs">{log.join("\n") || "—"}</pre>
     </div>
   );

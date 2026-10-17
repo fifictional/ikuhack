@@ -2,7 +2,10 @@
 
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+/** Hard stop for a single call, as a backstop to the agent's max-duration setting (credits are billed per minute). */
+const MAX_CALL_MS = 3 * 60_000;
 
 /**
  * Multilingual voice intake via an ElevenLabs agent. The agent calls our
@@ -27,6 +30,16 @@ function VoiceInner() {
     clientTools: { show_case: async ({ case_id }: { case_id: string }) => { setCaseId(case_id); return "shown"; } },
   });
   const live = conversation.status === "connected";
+  const { endSession } = conversation;
+
+  useEffect(() => {
+    if (!live) return;
+    const t = setTimeout(() => {
+      endSession();
+      setError("Call ended after 3 minutes. If anything's missing, add it on your case page.");
+    }, MAX_CALL_MS);
+    return () => clearTimeout(t);
+  }, [live, endSession]);
 
   async function start() {
     setError(null);

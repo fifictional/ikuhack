@@ -67,7 +67,7 @@ const tools: ElevenLabs.PromptAgentApiModelOutputToolsItem[] = [
   } as ElevenLabs.PromptAgentApiModelOutputToolsItem,
 ];
 
-// Languages common among UK social-housing tenants that the Flash v2.5 voice supports.
+// Languages common among UK social-housing tenants that Turbo v2.5 supports.
 const LANGUAGES = ["pl", "ar", "ro", "es", "pt", "tr", "uk", "hi"];
 
 function conversationConfig(voiceId: string): ElevenLabs.ConversationalConfig {
@@ -87,21 +87,22 @@ function conversationConfig(voiceId: string): ElevenLabs.ConversationalConfig {
         },
       } as ElevenLabs.PromptAgentApiModelOutput,
     },
-    // ElevenLabs requires English agents to use an English-only model (Flash v2, the cheapest);
-    // each other language switches to multilingual Flash v2.5 via its preset below.
-    tts: { modelId: "eleven_flash_v2", voiceId },
+    // ElevenLabs requires English agents to use an English-only model. Turbo is noticeably more natural
+    // than Flash at the same credit cost; each other language switches to Turbo v2.5 via its preset below.
+    // Lower stability = more expressive, less monotone; similarity keeps the voice consistent.
+    tts: { modelId: "eleven_turbo_v2", voiceId, stability: 0.4, similarityBoost: 0.8 },
     // Credit protection: hang up after 20s of silence and hard-stop at 3 minutes.
     turn: { silenceEndCallTimeout: 20 },
     conversation: { maxDurationSeconds: 180 },
     languagePresets: Object.fromEntries(
-      LANGUAGES.map((l) => [l, { overrides: { agent: { language: l }, tts: { modelId: "eleven_flash_v2_5" } } }]),
+      LANGUAGES.map((l) => [l, { overrides: { agent: { language: l }, tts: { modelId: "eleven_turbo_v2_5" } } }]),
     ),
   } as ElevenLabs.ConversationalConfig;
 }
 
 async function main() {
   const client = elevenlabs();
-  const voiceId = process.env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb";
+  const voiceId = process.env.ELEVENLABS_VOICE_ID || "Xb7hH8MSUJpSbSDYk0k2";
   const body = {
     name: "Docket intake",
     conversationConfig: conversationConfig(voiceId),

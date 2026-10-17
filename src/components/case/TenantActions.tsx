@@ -20,10 +20,16 @@ export function TenantActions({
 }) {
   const { send, upload, pending, error } = useCaseAction(caseId, "tenant");
   const [letter, setLetter] = useState<{ route: EscalationRoute; text: string } | null>(null);
+  const [drafting, setDrafting] = useState<EscalationRoute | null>(null);
 
   async function draft(route: EscalationRoute) {
-    const res = await fetch(`/api/cases/${caseId}/letters/${route}`);
-    setLetter({ route, text: await res.text() });
+    setDrafting(route);
+    try {
+      const res = await fetch(`/api/cases/${caseId}/letters/${route}`);
+      setLetter({ route, text: await res.text() });
+    } finally {
+      setDrafting(null);
+    }
   }
 
   return (
@@ -56,7 +62,9 @@ export function TenantActions({
         <div className="space-y-2 border-t border-border pt-3">
           <p className="font-medium text-danger">Your landlord has missed a legal deadline.</p>
           {escalationOptions.map((r) => (
-            <Btn key={r} className="w-full text-left" onClick={() => draft(r)}>{ESCALATION_LABEL[r]}</Btn>
+            <Btn key={r} className="w-full text-left" disabled={drafting !== null} onClick={() => draft(r)}>
+              {drafting === r ? "Drafting…" : ESCALATION_LABEL[r]}
+            </Btn>
           ))}
         </div>
       )}

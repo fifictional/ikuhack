@@ -1,0 +1,13 @@
+# Local TimescaleDB that behaves like Tiger Cloud, so you can work offline.
+services:
+  db:
+    image: timescale/timescaledb:latest-pg17
+    environment:
+      POSTGRES_PASSWORD: docket
+      POSTGRES_DB: docket
+    ports:
+      - "5432:5432"
+    volumes:
+      - docket-db:/var/lib/postgresql/data
+volumes:
+  docket-db:

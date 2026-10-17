@@ -26,15 +26,27 @@ const KIND_LABEL: Record<LawNodeKind, string> = {
   hazard: "Hazard",
 };
 
+const C = {
+  teal: "#125951",
+  tealDark: "#0c403a",
+  terracotta: "#c65729",
+  terracottaDark: "#a4461f",
+  ink: "#2b2620",
+  muted: "#6b6158",
+  cream: "#e9ddc7",
+  line: "#ddd0b8",
+  white: "#ffffff",
+};
+
 const KIND_COLOR: Record<LawNodeKind, string> = {
-  statute: "var(--teal-dark)",
-  section: "var(--teal)",
-  regulation: "var(--teal)",
-  requirement: "var(--terracotta)",
-  case: "var(--terracotta-dark)",
-  protocol: "var(--ink)",
-  standard: "var(--muted)",
-  hazard: "var(--cream)",
+  statute: C.tealDark,
+  section: C.teal,
+  regulation: C.teal,
+  requirement: C.terracotta,
+  case: C.terracottaDark,
+  protocol: C.ink,
+  standard: C.muted,
+  hazard: C.cream,
 };
 
 /** Edges that trace a source back to its statute. Relevance links render but don't form the citation path. */
@@ -333,7 +345,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               y1={s.y ?? 0}
               x2={tg.x ?? 0}
               y2={tg.y ?? 0}
-              stroke={onPath ? "var(--terracotta)" : "var(--muted)"}
+              stroke={onPath ? C.terracotta : C.muted}
               strokeWidth={onPath ? 2.5 : 1.3}
               opacity={onPath ? 0.9 : 0.5}
             />
@@ -356,7 +368,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               onPointerLeave={() => setHovered(null)}
             >
               {isFocus && (
-                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill="var(--terracotta)" opacity={0.25}>
+                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill={C.terracotta} opacity={0.25}>
                   <animate attributeName="r" values="20;36;20" dur="1.8s" repeatCount="indefinite" />
                 </circle>
               )}
@@ -365,14 +377,14 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
                 cy={n.y ?? 0}
                 r={r}
                 fill={KIND_COLOR[n.kind]}
-                stroke={isFocus ? "var(--ink)" : n.kind === "hazard" ? "var(--line)" : "none"}
+                stroke={isFocus ? C.ink : n.kind === "hazard" ? C.line : "none"}
                 strokeWidth={isFocus ? 2 : 1}
               />
-              <text x={n.x ?? 0} y={(n.y ?? 0) + 4} textAnchor="middle" fontSize={11} fill={n.kind === "hazard" ? "var(--ink)" : "var(--white)"}>
+              <text x={n.x ?? 0} y={(n.y ?? 0) + 4} textAnchor="middle" fontSize={11} fill={n.kind === "hazard" ? C.ink : C.white}>
                 {(n.kind[0] ?? "").toUpperCase()}
               </text>
               {lines.map((line, i) => (
-                <text key={i} x={n.x ?? 0} y={(n.y ?? 0) + r + 13 + i * 11} textAnchor="middle" fontSize={9.5} fill={isFocus ? "var(--terracotta-dark)" : "var(--ink)"} fontWeight={isFocus ? 700 : 400}>
+                <text key={i} x={n.x ?? 0} y={(n.y ?? 0) + r + 13 + i * 11} textAnchor="middle" fontSize={9.5} fill={isFocus ? C.terracottaDark : C.ink} fontWeight={isFocus ? 700 : 400}>
                   {line}
                 </text>
               ))}

@@ -83,9 +83,10 @@ function statusOf(dueAt: Date, metAt: string | undefined, now: Date): Obligation
 }
 
 function basisOf(facts: Facts, keys: FactKey[]): Obligation["basis"] {
-  return keys.flatMap((key) => {
+  // Absent facts are recorded as null, so learning one later explains why a conclusion changed.
+  return keys.map((key) => {
     const f = facts[key];
-    return f ? [{ key, value: f.value, beliefId: f.belief.id }] : [];
+    return { key, value: f?.value ?? null, beliefId: f?.belief.id ?? "" };
   });
 }
 

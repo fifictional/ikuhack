@@ -13,7 +13,8 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
     "sensors:simulate": "tsx scripts/simulate-sensors.ts",
-    "solana:keygen": "tsx scripts/solana-keygen.ts"
+    "solana:keygen": "tsx scripts/solana-keygen.ts",
+    "eval:intake": "tsx scripts/eval-intake.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.73.0",

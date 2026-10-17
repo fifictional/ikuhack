@@ -11,10 +11,12 @@ import { generateStructured, type InlineFile } from "./gemini";
 export const IntakeSchema = z.object({
   title: z.string().describe("Short case title, max 8 words, in English"),
   summary: z.string().describe("One-paragraph neutral summary of the problem, in English"),
+  tenantSummary: z.string().describe("The same summary in the tenant's own language, in plain words, for them to confirm"),
   category: z.enum(CATEGORIES),
   categoryConfidence: z.number().min(0).max(1),
-  location: z.string().nullable().describe("Room or part of the home, if stated"),
-  severityClaimedByTenant: z.enum(SEVERITIES).nullable().describe("Only if the tenant's words indicate urgency/danger"),
+  location: z.string().nullable().describe("Room or part of the home, if stated, in English"),
+  assessedSeverity: z.enum(SEVERITIES).describe("Your assessment of the risk, using the severity guide"),
+  severityConfidence: z.number().min(0).max(1),
   photoAssessment: z
     .object({
       severity: z.enum(SEVERITIES),
@@ -23,22 +25,36 @@ export const IntakeSchema = z.object({
     })
     .nullable()
     .describe("Only when photos are provided: what is visibly shown"),
-  vulnerableOccupantMentioned: z.boolean().describe("Tenant mentions a baby, child, elderly, disabled or ill household member"),
-  applianceName: z.string().nullable().describe("If the problem is a household appliance, which one"),
-  followUpQuestions: z.array(z.string()).max(3).describe("Questions that would most change the classification"),
+  vulnerableOccupantMentioned: z.boolean().describe("Tenant mentions a baby, child, elderly, disabled, pregnant or ill household member"),
+  applianceName: z.string().nullable().describe("If the problem is a household appliance, which one (lowercase, e.g. 'dishwasher')"),
+  followUpQuestions: z
+    .array(z.string())
+    .max(3)
+    .describe("Up to 3 short questions, in the tenant's language, whose answers would most change category or severity. Empty if clear."),
   detectedLanguage: z.string().describe("ISO 639-1 code of the tenant's message"),
 });
 export type IntakeDraft = z.infer<typeof IntakeSchema>;
 
 const SYSTEM = `You help tenants in England log repair problems with their rented home.
 Extract facts from the tenant's message and any photos. Be literal: do not invent details.
-Do not give legal conclusions or deadlines. Classify the category from this list: ${CATEGORIES.join(", ")}.
-Severity: "emergency" = immediate risk to health/safety (gas smell, no heating in winter with vulnerable occupant,
-exposed wiring, major leak, unsecured front door); "significant" = could harm health if left (spreading mould,
-persistent leak, no hot water); "routine" = everything else.
-Tenants may write in any language; always answer in English but report detectedLanguage.`;
+Do not give legal conclusions, rights or deadlines.
 
-export async function extractIntake(input: { text: string; photos?: InlineFile[] }): Promise<IntakeDraft> {
+Categories: ${CATEGORIES.join(", ")}.
+- Windows or doors that don't close/lock → security. Water coming in from outside or from above → leak.
+- A household appliance (dishwasher, washing machine, oven, fridge) → appliance, unless the real problem is a leak or electrics.
+- Cosmetic or minor fixtures (loose cupboard hinge) → other.
+
+Severity guide (when unsure between two levels, choose the higher):
+- emergency: immediate risk to health or safety. Gas smell, sparking or burning electrics, no heating in cold weather
+  with a vulnerable person, front door that won't lock, flooding, no working toilet in the home, structural collapse risk.
+- significant: will harm health or the home if left. Spreading mould, any recurring leak or water through ceilings,
+  no hot water, faulty smoke or CO alarm, pests, broken windows letting in cold or rain.
+- routine: inconvenience without health risk. Appliance faults, minor fixtures, cosmetic damage.
+
+The tenant may write in any language. Write title and summary in English; write tenantSummary and followUpQuestions
+in the tenant's language. Report detectedLanguage.`;
+
+export async function extractIntake(input: { text: string; photos?: InlineFile[] }): Promise<IntakeDraft & { _model: string }> {
   return generateStructured({
     schema: IntakeSchema,
     system: SYSTEM,
@@ -60,8 +76,13 @@ export function intakeToFacts(d: IntakeDraft, appliancesSuppliedByLandlord: stri
     },
   ];
   if (d.location) facts.push({ type: "FACT_ASSERTED", key: "issue.location", value: d.location, source: { kind: "tenant" } });
-  if (d.severityClaimedByTenant)
-    facts.push({ type: "FACT_ASSERTED", key: "issue.severity", value: d.severityClaimedByTenant, source: { kind: "tenant" } });
+  facts.push({
+    type: "FACT_ASSERTED",
+    key: "issue.severity",
+    value: d.assessedSeverity,
+    source: { kind: "ai_text", label: "Gemini triage" },
+    confidence: d.severityConfidence,
+  });
   if (d.photoAssessment)
     facts.push({
       type: "FACT_ASSERTED",

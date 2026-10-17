@@ -11,7 +11,11 @@ function required(name: string): string {
 export const env = {
   get DATABASE_URL() { return required("DATABASE_URL"); },
   get GEMINI_API_KEY() { return required("GEMINI_API_KEY"); },
-  get GEMINI_MODEL() { return process.env.GEMINI_MODEL ?? "gemini-2.5-flash"; },
+  get GEMINI_MODEL() { return process.env.GEMINI_MODEL || "gemini-3.8-flash"; },
+  get GEMINI_FALLBACK_MODELS() {
+    return (process.env.GEMINI_FALLBACK_MODELS ?? "gemini-3.5-flash,gemini-3.1-flash-lite").split(",").map((m) => m.trim()).filter(Boolean);
+  },
+  get GEMINI_THINKING() { return process.env.GEMINI_THINKING || "LOW"; },
   get ELEVENLABS_API_KEY() { return required("ELEVENLABS_API_KEY"); },
   get ELEVENLABS_AGENT_ID() { return required("ELEVENLABS_AGENT_ID"); },
   get ELEVENLABS_WEBHOOK_SECRET() { return required("ELEVENLABS_WEBHOOK_SECRET"); },

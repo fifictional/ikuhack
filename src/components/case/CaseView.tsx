@@ -1,8 +1,8 @@
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { getCase, recompute } from "@/lib/cases/service";
-import type { Category, Obligation } from "@/lib/domain/types";
-import { CATEGORY_LABEL, PHASE_LABEL, describeEvent, fmtDateTime } from "@/lib/ui/labels";
+import type { Category, Obligation, Severity } from "@/lib/domain/types";
+import { CATEGORY_LABEL, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, fmtDateTime, plainDuty } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
 import { LandlordActions } from "./LandlordActions";
 import { TenantActions } from "./TenantActions";
@@ -22,6 +22,9 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
   const open = s.obligations.filter((o) => o.status === "open" || o.status === "breached");
   const done = s.obligations.filter((o) => o.status === "met" || o.status === "met_late");
   const evidence = c.events.filter((e) => e.type === "EVIDENCE_ADDED");
+  const severity = s.facts["issue.severity"]?.value as Severity | undefined;
+  // The single most pressing duty, for the tenant's "what happens next" card.
+  const next = [...open].sort((a, b) => Number(b.status === "breached") - Number(a.status === "breached") || a.dueAt.localeCompare(b.dueAt))[0];
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -32,18 +35,20 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           <div className="flex flex-wrap gap-2 text-xs">
             <Pill>{PHASE_LABEL[s.phase]}</Pill>
             {category && <Pill>{CATEGORY_LABEL[category]}</Pill>}
-            {s.facts["issue.severity"] && <Pill>Severity: {String(s.facts["issue.severity"].value)}</Pill>}
+            {severity && <Pill tone={severity === "emergency" ? "danger" : undefined}>{SEVERITY_PLAIN[severity]}</Pill>}
             {s.facts["household.vulnerable"]?.value === true && <Pill tone="warn">Vulnerable occupant</Pill>}
           </div>
         </header>
 
-        <Section title="Who must do what, by when">
-          {open.length === 0 && <p className="text-sm text-muted">No open duties.</p>}
-          {open.map((o) => <ObligationRow key={o.id} o={o} now={s.computedAt} />)}
+        {role === "tenant" && <NextStep o={next} landlordName={c.landlord_name} now={s.computedAt} />}
+
+        <Section title={role === "tenant" ? "Everything that's due" : "Who must do what, by when"}>
+          {open.length === 0 && <p className="text-sm text-muted">Nothing is due right now.</p>}
+          {open.map((o) => <ObligationRow key={o.id} o={o} now={s.computedAt} role={role} landlordName={c.landlord_name} />)}
           {done.length > 0 && (
             <details className="text-sm">
-              <summary className="cursor-pointer text-muted">{done.length} completed</summary>
-              {done.map((o) => <ObligationRow key={o.id} o={o} now={s.computedAt} />)}
+              <summary className="cursor-pointer py-2 text-muted">{done.length} done</summary>
+              {done.map((o) => <ObligationRow key={o.id} o={o} now={s.computedAt} role={role} landlordName={c.landlord_name} />)}
             </details>
           )}
         </Section>
@@ -61,7 +66,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           </Section>
         )}
 
-        <Section title="How Docket's view changed">
+        <Section title={role === "tenant" ? "What changed and why" : "How Docket's view changed"}>
           {c.revisions.length === 0 && <p className="text-sm text-muted">No changes yet.</p>}
           <ul className="space-y-2">
             {c.revisions.map((r, i) => (
@@ -74,7 +79,9 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
         </Section>
 
         <Section title="Full record">
-          <ol className="space-y-1 border-l border-border pl-4">
+          <details>
+          <summary className="cursor-pointer text-sm text-muted">{c.events.length} timestamped entries — tap to show</summary>
+          <ol className="mt-3 space-y-1 border-l border-border pl-4">
             {c.events.map((e) => (
               <li key={e.id} className="text-sm">
                 <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(e.at)}</span>
@@ -83,6 +90,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               </li>
             ))}
           </ol>
+          </details>
         </Section>
       </div>
 
@@ -90,7 +98,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
         {role === "landlord" ? (
           <LandlordActions caseId={caseId} events={c.events} />
         ) : (
-          <TenantActions caseId={caseId} escalationOptions={s.escalationOptions} phase={s.phase} />
+          <TenantActions caseId={caseId} escalationOptions={s.escalationOptions} phase={s.phase} vulnerable={s.facts["household.vulnerable"]?.value === true} />
         )}
         <Section title={`Evidence (${evidence.length})`}>
           <div className="grid grid-cols-3 gap-2">
@@ -110,28 +118,66 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
   );
 }
 
-function ObligationRow({ o, now }: { o: Obligation; now: string }) {
+function ObligationRow({ o, now, role, landlordName }: { o: Obligation; now: string; role: "tenant" | "landlord"; landlordName: string }) {
+  const kind = o.legalBasis.statutory ? "Legal duty" : "Docket target (not a legal deadline)";
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-0">
-      <div>
+      <div className="min-w-0">
         <p className="text-sm font-medium">
-          <span className="mr-2 text-xs uppercase text-muted">{o.party}</span>
-          {o.title}
-          {o.provisional && <span className="ml-2 text-xs text-warn">provisional</span>}
+          {role === "tenant" ? (
+            plainDuty(o, landlordName)
+          ) : (
+            <><span className="mr-2 text-xs uppercase text-muted">{o.party}</span>{o.title}</>
+          )}
+          {o.provisional && <span className="ml-2 text-xs text-warn">{role === "tenant" ? "being checked" : "provisional"}</span>}
         </p>
-        <p className="text-xs text-muted">
-          {o.legalBasis.statutory ? "Legal duty" : "Docket target (not a legal deadline)"} · {o.legalBasis.citation}
-          {o.pausedMs > 0 && ` · clock paused ${Math.round(o.pausedMs / 3_600_000)}h (missed access)`}
-        </p>
+        {role === "tenant" ? (
+          <details className="text-xs text-muted">
+            <summary className="cursor-pointer py-1">{kind} · why?</summary>
+            <p>{o.reason}</p>
+            <p className="mt-1">{o.legalBasis.citation}</p>
+          </details>
+        ) : (
+          <p className="text-xs text-muted">{kind} · {o.legalBasis.citation}</p>
+        )}
+        {o.pausedMs > 0 && <p className="text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>}
       </div>
       <div className="shrink-0 text-right">
         {o.status === "open" || o.status === "breached" ? (
           <Countdown dueAt={o.dueAt} serverNow={now} />
         ) : (
-          <span className="text-sm text-ok">{o.status === "met" ? "Met" : "Met late"}</span>
+          <span className="text-sm text-ok">{o.status === "met" ? "Done on time" : "Done late"}</span>
         )}
         <p className="text-xs text-muted">{fmtDateTime(o.dueAt)}</p>
       </div>
+    </div>
+  );
+}
+
+/** Tenant-only headline: the one thing that matters most right now. */
+function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlordName: string; now: string }) {
+  if (!o) {
+    return (
+      <div className="rounded-xl border border-border bg-surface p-4">
+        <p className="text-sm text-muted">What happens next</p>
+        <p className="text-lg font-semibold">Nothing is due right now. We&apos;ll update you when anything changes.</p>
+      </div>
+    );
+  }
+  const breached = o.status === "breached";
+  return (
+    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger" : "border-accent"} bg-surface`}>
+      <p className="text-sm text-muted">{breached ? "Deadline missed" : "What happens next"}</p>
+      <p className="text-lg font-semibold">
+        {plainDuty(o, landlordName)} {breached ? "— this was due" : "by"} {fmtDateTime(o.dueAt)}
+      </p>
+      <div className="mt-1 flex items-center gap-2">
+        <Countdown dueAt={o.dueAt} serverNow={now} />
+        {o.legalBasis.statutory && <span className="text-xs text-muted">· legal deadline</span>}
+      </div>
+      {breached && o.party === "landlord" && (
+        <p className="mt-2 text-sm">You can escalate this — see the options under <b>Your actions</b>.</p>
+      )}
     </div>
   );
 }
@@ -145,9 +191,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Pill({ children, tone }: { children: React.ReactNode; tone?: "warn" }) {
+function Pill({ children, tone }: { children: React.ReactNode; tone?: "warn" | "danger" }) {
+  const cls = tone === "danger" ? "border-danger text-danger" : tone === "warn" ? "border-warn text-warn" : "border-border text-muted";
   return (
-    <span className={`rounded-full border px-2 py-0.5 ${tone === "warn" ? "border-warn text-warn" : "border-border text-muted"}`}>
+    <span className={`rounded-full border px-2 py-0.5 ${cls}`}>
       {children}
     </span>
   );

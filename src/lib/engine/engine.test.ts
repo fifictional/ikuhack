@@ -52,7 +52,7 @@ describe("adaptive reasoning", () => {
 
     const revisions = diff(before, after);
     const dropped = revisions.find((r) => r.kind === "obligation_abandoned");
-    expect(dropped?.summary).toMatch(/issue.category is now "leak"/);
+    expect(dropped?.summary).toMatch(/type of problem is now "leak"/);
   });
 
   it("sensor vs surveyor conflict on damp severity resolves safety-first", () => {

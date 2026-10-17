@@ -7,29 +7,53 @@ import { CATEGORY_LABEL } from "@/lib/ui/labels";
 import { VoiceReport } from "./VoiceReport";
 
 /**
- * Text/photo reporting: describe → Gemini drafts → tenant confirms → case created → photos stored as evidence.
+ * Text/photo reporting: describe → Gemini drafts → tenant answers any follow-up questions (in their language)
+ * → confirms → case created → photos stored as evidence.
  * TODO(person A): voice-note button (record → /api/transcribe → fills the textarea), accessibility pass, i18n of UI copy.
  */
+
+const URGENCY: Record<IntakeDraft["assessedSeverity"], { label: string; tone: string }> = {
+  emergency: { label: "Emergency — needs action within 24 hours", tone: "text-danger" },
+  significant: { label: "Urgent — could affect your health or home", tone: "text-warn" },
+  routine: { label: "Routine repair", tone: "text-muted" },
+};
+
+type QA = { q: string; a: string };
+const compose = (text: string, qa: QA[]) =>
+  qa.length ? `${text}\n\nFollow-up answers:\n${qa.map((x) => `Q: ${x.q}\nA: ${x.a}`).join("\n")}` : text;
 export function ReportFlow() {
   const router = useRouter();
-  const [mode, setMode] = useState<"voice" | "type">("voice");
+  // Typing is the default while VOICE_ENABLED=false; switch to "voice" for the demo.
+  const [mode, setMode] = useState<"voice" | "type">("type");
   const [text, setText] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
   const [draft, setDraft] = useState<IntakeDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [qaLog, setQaLog] = useState<QA[]>([]);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
 
-  async function analyse() {
+  async function analyse(qa: QA[] = qaLog) {
     setBusy(true);
     setError(null);
     const form = new FormData();
-    form.set("text", text);
+    form.set("text", compose(text, qa));
     photos.forEach((p) => form.append("photos", p));
     const res = await fetch("/api/intake", { method: "POST", body: form });
     const body = await res.json();
     setBusy(false);
     if (!res.ok) return setError(body.error);
     setDraft(body.draft);
+    setAnswers({});
+  }
+
+  /** Fold the tenant's answers into the report and let Gemini re-classify with the extra detail. */
+  function answerFollowUps() {
+    if (!draft) return;
+    const answered = draft.followUpQuestions.flatMap((q, i) => (answers[i]?.trim() ? [{ q, a: answers[i].trim() }] : []));
+    const next = [...qaLog, ...answered];
+    setQaLog(next);
+    analyse(next);
   }
 
   async function submit() {
@@ -38,7 +62,7 @@ export function ReportFlow() {
     const res = await fetch("/api/cases", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ description: text || draft.summary, channel: photos.length ? "photo" : "text", draft }),
+      body: JSON.stringify({ description: compose(text, qaLog) || draft.summary, channel: photos.length ? "photo" : "text", draft }),
     });
     const body = await res.json();
     if (!res.ok) {
@@ -75,22 +99,47 @@ export function ReportFlow() {
             className="w-full rounded-lg border border-border bg-surface p-3" />
           <input type="file" accept="image/*" multiple capture="environment"
             onChange={(e) => setPhotos([...(e.target.files ?? [])])} />
-          <button disabled={busy || (!text && photos.length === 0)} onClick={analyse}
+          <button disabled={busy || (!text && photos.length === 0)} onClick={() => analyse()}
             className="w-full rounded-lg bg-accent py-2 text-white disabled:opacity-50">
             {busy ? "Reading your report…" : "Continue"}
           </button>
         </div>
       ) : (
-        <div className="space-y-3 rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm text-muted">Here&apos;s what we understood — is this right?</p>
-          <h2 className="text-lg font-semibold">{draft.title}</h2>
-          <p className="text-sm">{draft.summary}</p>
-          <p className="text-sm">Type: <b>{CATEGORY_LABEL[draft.category]}</b>{draft.location && <> · Where: <b>{draft.location}</b></>}</p>
+        <div className="space-y-4 rounded-xl border border-border bg-surface p-4">
+          <p className="text-sm text-muted">Here&apos;s what we understood. Is this right?</p>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold">{draft.title}</h2>
+            <p>{draft.tenantSummary}</p>
+            {draft.detectedLanguage !== "en" && <p className="text-xs text-muted">In English: {draft.summary}</p>}
+          </div>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+            <dt className="text-muted">Type</dt><dd>{CATEGORY_LABEL[draft.category]}</dd>
+            {draft.location && (<><dt className="text-muted">Where</dt><dd>{draft.location}</dd></>)}
+            <dt className="text-muted">How urgent</dt>
+            <dd className={URGENCY[draft.assessedSeverity].tone}>{URGENCY[draft.assessedSeverity].label}</dd>
+          </dl>
           {draft.photoAssessment && <p className="text-sm text-muted">From your photos: {draft.photoAssessment.observations}</p>}
-          {/* TODO(person A): let the tenant answer followUpQuestions inline before submitting. */}
+
+          {draft.followUpQuestions.length > 0 && (
+            <div className="space-y-3 border-t border-border pt-3">
+              <p className="text-sm font-medium">A couple of quick questions help us get this right (optional):</p>
+              {draft.followUpQuestions.map((q, i) => (
+                <label key={q} className="block space-y-1 text-sm">
+                  <span>{q}</span>
+                  <input value={answers[i] ?? ""} onChange={(e) => setAnswers({ ...answers, [i]: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2" />
+                </label>
+              ))}
+              <button disabled={busy || !Object.values(answers).some((a) => a.trim())} onClick={answerFollowUps}
+                className="w-full rounded-lg border border-accent py-2 text-accent disabled:opacity-40">
+                {busy ? "Updating…" : "Update with my answers"}
+              </button>
+            </div>
+          )}
+
           <div className="flex gap-2">
-            <button onClick={() => setDraft(null)} className="rounded-lg border border-border px-4 py-2">Edit</button>
-            <button disabled={busy} onClick={submit} className="flex-1 rounded-lg bg-accent py-2 text-white disabled:opacity-50">
+            <button onClick={() => { setDraft(null); setQaLog([]); }} className="rounded-lg border border-border px-4 py-3">Edit</button>
+            <button disabled={busy} onClick={submit} className="flex-1 rounded-lg bg-accent py-3 font-medium text-white disabled:opacity-50">
               {busy ? "Logging…" : "Log it with my landlord"}
             </button>
           </div>

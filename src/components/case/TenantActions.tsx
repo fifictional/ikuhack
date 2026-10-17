@@ -11,10 +11,12 @@ export function TenantActions({
   caseId,
   escalationOptions,
   phase,
+  vulnerable,
 }: {
   caseId: string;
   escalationOptions: EscalationRoute[];
   phase: CaseState["phase"];
+  vulnerable: boolean;
 }) {
   const { send, upload, pending, error } = useCaseAction(caseId, "tenant");
   const [letter, setLetter] = useState<{ route: EscalationRoute; text: string } | null>(null);
@@ -34,9 +36,11 @@ export function TenantActions({
           onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
       </label>
 
-      <Btn disabled={pending} onClick={() => send({ type: "FACT_ASSERTED", key: "household.vulnerable", value: true, source: { kind: "tenant" } })}>
-        Someone at home is vulnerable (baby, elderly, ill)
-      </Btn>
+      {!vulnerable && (
+        <Btn disabled={pending} onClick={() => send({ type: "FACT_ASSERTED", key: "household.vulnerable", value: true, source: { kind: "tenant" } })}>
+          Someone at home is vulnerable (baby, elderly, ill)
+        </Btn>
+      )}
 
       {phase === "fixed_pending_confirmation" && (
         <div className="flex gap-2">

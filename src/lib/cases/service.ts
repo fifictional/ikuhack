@@ -44,11 +44,18 @@ export async function appendEvent(
   input: unknown,
   at?: Date,
 ): Promise<{ event: CaseEvent; state: CaseState; revisions: Revision[] }> {
+  const event = await insertEvent(caseId, actor, input, at);
+  const { state, revisions } = await recompute(caseId);
+  return { event, state, revisions };
+}
+
+/** Append + hash-chain without re-projecting. Callers must recompute() afterwards. */
+async function insertEvent(caseId: string, actor: Actor, input: unknown, at?: Date): Promise<CaseEvent> {
   const body: EventBody = parseEventBody(input);
   const occurredAt = at ?? (await getNow());
   const { type, ...payload } = body;
 
-  const event = await db().begin(async (tx) => {
+  return db().begin(async (tx) => {
     // Serialise appends per case so the hash chain stays linear.
     await tx`SELECT id FROM cases WHERE id = ${caseId} FOR UPDATE`;
     const [head] = await tx`SELECT hash FROM case_events WHERE case_id = ${caseId} ORDER BY seq DESC LIMIT 1`;
@@ -61,9 +68,6 @@ export async function appendEvent(
       RETURNING id, case_id, occurred_at, actor, type, payload`;
     return toEvent(row);
   });
-
-  const { state, revisions } = await recompute(caseId);
-  return { event, state, revisions };
 }
 
 /** Re-project one case at the current (demo) time and record what changed. */
@@ -103,9 +107,11 @@ export async function createCase(input: {
   const at = input.at ?? (await getNow());
   const [c] = await db()`
     INSERT INTO cases (property_id, title, opened_at) VALUES (${input.propertyId}, ${input.title}, ${at}) RETURNING id`;
-  let result = await appendEvent(c.id, "tenant", { type: "REPORTED", ...input.report }, at);
-  for (const f of input.facts ?? []) result = await appendEvent(c.id, "system", f, at);
-  return { caseId: c.id, state: result.state };
+  // Log the report and its initial facts, then project once: intermediate states aren't meaningful.
+  await insertEvent(c.id, "tenant", { type: "REPORTED", ...input.report }, at);
+  for (const f of input.facts ?? []) await insertEvent(c.id, "system", f, at);
+  const { state } = await recompute(c.id);
+  return { caseId: c.id, state };
 }
 
 export interface CaseRow {

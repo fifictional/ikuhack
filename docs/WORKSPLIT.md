@@ -16,9 +16,9 @@ The interface between you is `src/lib/domain/types.ts` (events, facts) and the c
 Done when a typed report shows up on the landlord dashboard with a live clock.
 
 **A**
-- [ ] `/tenant/report` text + photo flow working against real Gemini; tune the prompt in `src/lib/ai/intake.ts` on 10 realistic reports (mould, leak, boiler, dishwasher, lock, pests, in 2–3 languages)
-- [ ] Answer `followUpQuestions` inline before submitting
-- [ ] Tenant case page: mobile layout, plain-English wording for duties
+- [x] `/tenant/report` text + photo flow working against real Gemini; prompt tuned with `npm run eval:intake` (14 reports, 5 languages, 14/14). Photo path not yet tried with a real photo
+- [x] Answer `followUpQuestions` inline before submitting
+- [x] Tenant case page: mobile layout, plain-English wording for duties
 
 **B**
 - [ ] Check every `VERIFY` in `src/lib/engine/law.ts` on legislation.gov.uk, and fix the numbers and tests

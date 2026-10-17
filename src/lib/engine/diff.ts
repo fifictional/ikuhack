@@ -1,7 +1,20 @@
-import type { CaseState, Obligation, Revision } from "@/lib/domain/types";
+import type { CaseState, FactKey, Obligation, Revision } from "@/lib/domain/types";
 
-const fmt = (v: unknown) => (typeof v === "string" ? v.replaceAll("_", " ") : JSON.stringify(v));
-const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Europe/London" });
+const FACT_LABEL: Record<FactKey, string> = {
+  "issue.category": "the type of problem",
+  "issue.severity": "how serious it is",
+  "issue.location": "where it is",
+  "issue.summary": "the description",
+  "appliance.suppliedByLandlord": "whether the landlord supplied the appliance",
+  "cause.tenantDamage": "whether the household caused the damage",
+  "household.vulnerable": "someone vulnerable at home",
+  "hazard.dampPersistent": "persistent damp (sensor)",
+};
+
+const fmt = (v: unknown) =>
+  v === null || v === undefined ? "unknown" : v === true ? "yes" : v === false ? "no" : typeof v === "string" ? v.replaceAll("_", " ") : JSON.stringify(v);
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 /**
  * Explains what changed between two projections — this is the "agent changed
@@ -78,14 +91,14 @@ export function diff(prev: CaseState | null, next: CaseState): Revision[] {
 }
 
 function whyAbandoned(o: Obligation, next: CaseState): string {
-  const changed = o.basis.filter((b) => next.facts[b.key]?.value !== b.value);
+  const changed = o.basis.filter((b) => (next.facts[b.key]?.value ?? null) !== b.value);
   if (changed.length === 0) return "the circumstances it depended on no longer apply.";
   return changed
     .map((b) => {
       const now = next.facts[b.key];
       return now
-        ? `${b.key} is now "${fmt(now.value)}" (was "${fmt(b.value)}", per ${now.belief.source.label ?? now.belief.source.kind})`
-        : `${b.key} ("${fmt(b.value)}") was retracted`;
+        ? `${FACT_LABEL[b.key]} is now "${fmt(now.value)}" (was "${fmt(b.value)}", per ${now.belief.source.label ?? now.belief.source.kind})`
+        : `${FACT_LABEL[b.key]} ("${fmt(b.value)}") was retracted`;
     })
     .join("; ");
 }

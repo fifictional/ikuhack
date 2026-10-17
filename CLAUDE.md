@@ -16,6 +16,7 @@ Pillars to pitch against: transparency, convenience, price, speed, coverage.
   - `rules.ts` — facts + events → obligations, each with `basis` (the facts it rests on) so `diff.ts` can explain *why* a conclusion was dropped. That explanation is the core of the demo.
   - `law.ts` — **every legal number, citation and commencement date lives here.** Items marked VERIFY must be checked on legislation.gov.uk. `statutory: false` = Docket target; the UI must never present targets as legal deadlines.
   - `working-days.ts` — England & Wales bank holidays, Europe/London day boundaries.
+- **Gemini models:** default `gemini-3.8-flash` (2.5 is retired for new keys). Free tier = 5 req/min per model, so `generateStructured` retries then falls back through `GEMINI_FALLBACK_MODELS`. Change prompts only with `npm run eval:intake` (paced to the free tier, ~3 min).
 - **LLM boundary:** Gemini (`src/lib/ai/`) only *extracts facts* (as `FACT_ASSERTED` with an `ai_text`/`ai_vision`/`tenant` source). It never decides duties or deadlines. Letters are templated from engine output (`src/lib/escalation/`).
 - **Domain contract:** `src/lib/domain/types.ts` (zod). Event types, fact keys, categories. Changing it affects both teammates — coordinate.
 - **Time travel:** all "now" comes from `getNow()` (`src/lib/db/settings.ts`), which applies a demo clock offset. Law commencement overrides also live in `app_settings`. `/demo` drives both.

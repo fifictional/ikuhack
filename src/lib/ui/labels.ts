@@ -1,4 +1,4 @@
-import type { CaseEvent, CaseState, Category, EscalationRoute } from "@/lib/domain/types";
+import type { CaseEvent, CaseState, Category, EscalationRoute, Obligation, Severity } from "@/lib/domain/types";
 
 export const CATEGORY_LABEL: Record<Category, string> = {
   damp_mould: "Damp & mould",
@@ -53,6 +53,35 @@ export function describeEvent(e: CaseEvent): string {
     case "CLOSED": return `Closed: ${e.reason}`;
   }
 }
+
+/** What each duty means in plain words, keyed by obligation id (before any ":<eventId>" suffix). */
+const PLAIN_DUTY: Record<string, string> = {
+  "landlord.acknowledge": "confirm they've received your report",
+  "s11.repair": "fix it",
+  "s9a.fitness": "fix the cause so your home is fit to live in",
+  "contract.appliance_repair": "repair the appliance they supplied",
+  "alarms.repair": "repair or replace the alarm",
+  "awaab.emergency": "check the problem and make it safe",
+  "awaab.investigate": "inspect the problem",
+  "awaab.summary": "send you a written summary of what they found",
+  "awaab.start_works": "start the repair work",
+  "landlord.attend": "turn up to the appointment",
+  "protocol.landlord_response": "reply to your letter of claim",
+  "tenant.allow_access": "let them in for the appointment",
+  "tenant.remedy_damage": "put right the damage",
+};
+
+/** "Riverside Homes must fix it" / "You need to let them in" — the tenant's view of a duty. */
+export function plainDuty(o: Obligation, landlordName: string): string {
+  const phrase = PLAIN_DUTY[o.id.split(":")[0]] ?? o.title.toLowerCase();
+  return o.party === "tenant" ? `You need to ${phrase}` : `${landlordName} must ${phrase}`;
+}
+
+export const SEVERITY_PLAIN: Record<Severity, string> = {
+  emergency: "Emergency",
+  significant: "Urgent",
+  routine: "Routine",
+};
 
 export const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });

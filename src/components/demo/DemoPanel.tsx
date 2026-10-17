@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { DEMO } from "@/lib/demo";
 
 /** Pitch-day control panel. Each button shows the agent adapting live. */
 export function DemoPanel() {
@@ -22,17 +21,6 @@ export function DemoPanel() {
 
   const demo = (body: unknown) => run(JSON.stringify(body), "/api/demo", body);
 
-  // Healthy readings, then a damp spike, for the hero flat's bedroom.
-  async function streamDamp() {
-    const now = Date.now();
-    const readings = Array.from({ length: 14 * 24 }, (_, i) => {
-      const ts = new Date(now - (14 * 24 - i) * 3_600_000);
-      const night = ts.getUTCHours() <= 6;
-      return { room: "bedroom", ts: ts.toISOString(), humidity_pct: night ? 78 + Math.random() * 4 : 62, temp_c: night ? 15.5 : 18.5 };
-    });
-    await run("stream damp sensor data", "/api/sensors", { propertyId: DEMO.tenantPropertyId, readings });
-  }
-
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Group title="Time">
@@ -43,9 +31,6 @@ export function DemoPanel() {
       <Group title="Law changes">
         <B disabled={busy} onClick={() => demo({ action: "commence", phaseId: "awaab-2" })}>Commence Awaab&apos;s Law phase 2 today</B>
         <B disabled={busy} onClick={() => demo({ action: "uncommence", phaseId: "awaab-2" })}>Undo</B>
-      </Group>
-      <Group title="Sensors (Tiger Data)">
-        <B disabled={busy} onClick={streamDamp}>Stream 14 days of damp bedroom readings</B>
       </Group>
       <Group title="Evidence (Solana devnet)">
         <B disabled={busy} onClick={() => run("anchor", "/api/anchor")}>Anchor new evidence now</B>

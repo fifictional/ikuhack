@@ -6,7 +6,6 @@ Setup: `db:seed`, clock reset, two browser windows side by side: **tenant (phone
 2. **Report by voice (40s).** The tenant taps *Speak* and describes black mould in the bedroom in Polish. The agent asks one follow-up, logs it, and reads back the landlord's deadline. The landlord window shows the new case with an Awaab's Law clock.
 3. **The agent adapts (60s).**
    - The tenant taps *Someone at home is vulnerable* → the case becomes a **24h emergency**, and the revision feed explains why.
-   - `/demo` → stream damp sensor data, while the surveyor marks it "routine" → a **conflict** appears, resolved safety-first, with both sources shown.
    - Second case: the dishwasher "won't drain". The contractor records a leak into the subfloor → the **appliance duty is dropped, s11 repair duty added**, with the reason given.
 4. **Accountability on both sides (20s).** The tenant misses an access slot → the landlord's clock **pauses** and the tenant's duty shows as missed.
 5. **Deadline missed (30s).** `/demo` +1 week → breach → the tenant sees *Letter of claim*, a pre-filled pre-action protocol letter plus a PDF evidence bundle.

@@ -4,6 +4,7 @@ import { getCase, recompute } from "@/lib/cases/service";
 import type { Category, Obligation, Severity } from "@/lib/domain/types";
 import { CATEGORY_LABEL, FACT_PLAIN, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, factValuePlain, deadlineLabel, fmtDateTime, plainDuty, sourcePlain } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
+import { PhotoAuthenticity } from "./PhotoAuthenticity";
 import { ListenButton } from "./ListenButton";
 import { LandlordActions } from "./LandlordActions";
 import { TenantActions } from "./TenantActions";
@@ -103,6 +104,11 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           <TenantActions caseId={caseId} escalationOptions={s.escalationOptions} phase={s.phase} vulnerable={s.facts["household.vulnerable"]?.value === true} />
         )}
         <Section title={`Evidence (${evidence.length})`}>
+          {role === "landlord" ? (
+            <div className="space-y-2">
+              {evidence.map((e) => (e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? <PhotoAuthenticity key={e.id} evidenceId={e.evidenceId} caption={e.caption} /> : null))}
+            </div>
+          ) : (
           <div className="grid grid-cols-3 gap-2">
             {evidence.map((e) =>
               e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? (
@@ -111,6 +117,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               ) : null,
             )}
           </div>
+          )}
           {evidence.some((e) => e.type === "EVIDENCE_ADDED" && e.kind !== "photo") && (
             <ul className="space-y-1 text-sm">
               {evidence.map((e) =>

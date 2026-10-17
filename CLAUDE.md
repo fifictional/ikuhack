@@ -52,7 +52,7 @@ Keep the repo outside iCloud-synced folders (Desktop, Documents); it lives at `~
 
 ## UI and brand
 
-All UI must follow the brand system in `.claude/skills/docket-brand/SKILL.md`: teal, terracotta, ink, cream and white only, used through the tokens in `src/app/globals.css`, never raw hex or Tailwind's default palette. The logo is `src/components/brand/Logo.tsx`. Load that skill before any UI change.
+All UI must follow the **greyscale** brand system in `.claude/skills/docket-brand/SKILL.md`: greys, white and near-black via the tokens in `src/app/globals.css` (`primary`, `highlight`, `panel`, `ink`…), never raw hex or Tailwind's default palette. Colour is only for deadline status (amber/red/green). The logo (`src/components/brand/Logo.tsx`) keeps its D-with-house shape in greyscale. Load that skill before any UI change.
 
 ## Conventions
 

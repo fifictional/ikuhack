@@ -174,7 +174,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
           disabled={connecting}
           aria-label={live ? "End call" : "Start talking to Docket"}
           className={`mx-auto flex h-28 w-28 items-center justify-center rounded-full font-semibold text-white transition disabled:opacity-60 ${
-            live && !paused && conversation.isSpeaking ? "scale-105 bg-terracotta" : "bg-teal hover:bg-teal-dark"
+            live && !paused && conversation.isSpeaking ? "scale-105 bg-highlight" : "bg-primary hover:bg-primary-dark"
           }`}
         >
           {live ? "End" : connecting ? "Connecting…" : "Tap to talk"}
@@ -192,7 +192,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
           <button
             onClick={togglePause}
             className={`mt-3 rounded-lg border px-4 py-2 text-sm font-medium ${
-              paused ? "border-teal bg-teal text-white hover:bg-teal-dark" : "border-teal text-teal hover:bg-teal-tint"
+              paused ? "border-primary bg-primary text-white hover:bg-primary-dark" : "border-primary text-primary hover:bg-primary-tint"
             }`}
           >
             {paused ? "Resume" : "Pause"}
@@ -203,7 +203,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
       {lines.length > 0 && (
         <div className="space-y-1">
           <p className="text-xs text-muted">Tap anything you said to fix it if we heard it wrong.</p>
-          <ol className="max-h-72 space-y-2 overflow-y-auto rounded-lg bg-cream-soft p-3 text-sm" aria-label="Transcript">
+          <ol className="max-h-72 space-y-2 overflow-y-auto rounded-lg bg-background p-3 text-sm" aria-label="Transcript">
             {lines.map((l, i) =>
               editing?.index === i ? (
                 <li key={i} className="space-y-2 text-right">
@@ -212,11 +212,11 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
                     value={editing.text}
                     onChange={(e) => setEditing({ index: i, text: e.target.value })}
                     rows={2}
-                    className="w-full rounded-lg border border-teal bg-surface p-2 text-left"
+                    className="w-full rounded-lg border border-primary bg-surface p-2 text-left"
                   />
                   <div className="flex justify-end gap-2">
                     <button onClick={() => setEditing(null)} className="rounded-md border border-border px-3 py-1 text-xs">Cancel</button>
-                    <button onClick={saveEdit} className="rounded-md bg-teal px-3 py-1 text-xs font-semibold text-white hover:bg-teal-dark">Save correction</button>
+                    <button onClick={saveEdit} className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-dark">Save correction</button>
                   </div>
                 </li>
               ) : (
@@ -225,7 +225,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
                     <button
                       onClick={() => setEditing({ index: i, text: l.text })}
                       title="Edit what you said"
-                      className="inline-block rounded-lg bg-teal px-3 py-1.5 text-left text-white hover:bg-teal-dark"
+                      className="inline-block rounded-lg bg-primary px-3 py-1.5 text-left text-white hover:bg-primary-dark"
                     >
                       {l.text}
                       <span className="ml-2 text-xs text-white/80 underline">{l.heard ? "edited" : "edit"}</span>
@@ -241,14 +241,14 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
       )}
 
       {caseId && (
-        <div className="space-y-1 rounded-lg border-2 border-teal bg-teal-tint p-3 text-center text-sm">
+        <div className="space-y-1 rounded-lg border-2 border-primary bg-primary-tint p-3 text-center text-sm">
           <p className="font-medium">Your repair is logged{saved === "saved" ? " and the call transcript is saved as evidence" : ""}.</p>
           {saved === "stale" && (
-            <button onClick={() => saveTranscript("Voice report transcript (corrected by tenant)")} className="font-medium text-teal underline">
+            <button onClick={() => saveTranscript("Voice report transcript (corrected by tenant)")} className="font-medium text-primary underline">
               Save my corrections to the case
             </button>
           )}
-          <Link href={`/tenant/cases/${caseId}`} className="block font-medium text-teal underline">See your landlord&apos;s deadline</Link>
+          <Link href={`/tenant/cases/${caseId}`} className="block font-medium text-primary underline">See your landlord&apos;s deadline</Link>
         </div>
       )}
 
@@ -256,7 +256,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
         <div className="space-y-2 text-center text-sm">
           <p className="text-danger">{error}</p>
           {onFallback && (
-            <button onClick={onFallback} className="font-medium text-teal underline">Type your report instead</button>
+            <button onClick={onFallback} className="font-medium text-primary underline">Type your report instead</button>
           )}
         </div>
       )}

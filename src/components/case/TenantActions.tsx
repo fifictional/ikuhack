@@ -30,7 +30,7 @@ export function TenantActions({
     <div className="space-y-4 rounded-xl border border-border bg-surface p-4 text-sm">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Your actions</h2>
 
-      <label className="block cursor-pointer rounded-md border border-dashed border-border p-3 text-center hover:border-teal hover:bg-teal-tint">
+      <label className="block cursor-pointer rounded-md border border-dashed border-border p-3 text-center hover:border-primary hover:bg-primary-tint">
         Add photo or video
         <input type="file" accept="image/*,video/*" capture="environment" className="hidden"
           onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />

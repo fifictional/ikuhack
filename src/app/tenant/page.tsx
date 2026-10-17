@@ -14,7 +14,7 @@ export default function TenantHome() {
           <p className="text-sm text-muted">Flat 4, 12 Canal Street</p>
           <h1 className="text-2xl font-semibold">Your repairs</h1>
         </div>
-        <Link href="/tenant/report" className="rounded-lg bg-teal font-semibold text-white hover:bg-teal-dark px-4 py-2">Report a problem</Link>
+        <Link href="/tenant/report" className="rounded-lg bg-primary font-semibold text-white hover:bg-primary-dark px-4 py-2">Report a problem</Link>
       </div>
       <Suspense fallback={<p className="text-sm text-muted">Loading…</p>}>
         <TenantCases />

@@ -28,26 +28,29 @@ const KIND_LABEL: Record<LawNodeKind, string> = {
   guidance: "Guidance",
 };
 
-// Greyscale palette from globals.css (status colours reserved for deadlines).
+// Accent palette for the graph (the app chrome stays greyscale).
 const C = {
+  teal: "#125951",
+  tealDark: "#0c403a",
+  terracotta: "#c65729",
+  terracottaDark: "#a4461f",
   ink: "#1a1a1a",
-  muted: "#6b6b6b",
-  highlight: "#4a4a4a",
-  highlightDark: "#333333",
+  muted: "#6b6158",
+  cream: "#e9ddc7",
   line: "#e4e4e0",
   white: "#ffffff",
   logoDoor: "#8a8a8a",
 };
 
 const KIND_COLOR: Record<LawNodeKind, string> = {
-  statute: C.ink,
-  section: C.highlight,
-  regulation: C.highlightDark,
-  requirement: "#000000",
-  case: C.logoDoor,
-  protocol: C.highlight,
+  statute: C.tealDark,
+  section: C.teal,
+  regulation: C.teal,
+  requirement: C.terracotta,
+  case: C.terracottaDark,
+  protocol: C.ink,
   standard: C.muted,
-  hazard: C.line,
+  hazard: C.cream,
   guidance: C.logoDoor,
 };
 
@@ -139,7 +142,7 @@ export function LawGraphPanel({ obligation, onClose }: { obligation: Obligation 
         </div>
 
         <div className="space-y-5 px-5 py-5">
-          <div className="rounded-xl bg-highlight-tint p-4">
+          <div className="rounded-xl p-4" style={{ background: "#e4efec" }}>
             <p className="text-xs uppercase tracking-wide text-muted">In plain English</p>
             <p className="mt-1 text-sm text-foreground">{obligation.reason}</p>
           </div>
@@ -158,7 +161,7 @@ export function LawGraphPanel({ obligation, onClose }: { obligation: Obligation 
                     <p className="mt-0.5 font-mono text-xs text-muted">{focus.citation}</p>
                     <p className="mt-3 text-sm text-foreground">{focus.excerpt}</p>
                     {focus.url ? (
-                      <a href={focus.url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-medium text-primary underline">
+                      <a href={focus.url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-medium underline" style={{ color: "#125951" }}>
                         Open the source ↗
                       </a>
                     ) : (
@@ -347,7 +350,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               y1={s.y ?? 0}
               x2={tg.x ?? 0}
               y2={tg.y ?? 0}
-              stroke={onPath ? C.ink : C.muted}
+              stroke={onPath ? C.terracotta : C.muted}
               strokeWidth={onPath ? 2.5 : 1.3}
               opacity={onPath ? 0.9 : 0.5}
             />
@@ -363,14 +366,14 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
           return (
             <g
               key={n.id}
-              opacity={dim ? 0.3 : 1}
+              opacity={dim ? 0.55 : 1}
               style={{ cursor: "grab" }}
               onPointerDown={(e) => startNode(e, n.id)}
               onPointerEnter={() => setHovered(n.id)}
               onPointerLeave={() => setHovered(null)}
             >
               {isFocus && (
-                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill={C.ink} opacity={0.25}>
+                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill={C.terracotta} opacity={0.25}>
                   <animate attributeName="r" values="20;36;20" dur="1.8s" repeatCount="indefinite" />
                 </circle>
               )}
@@ -386,7 +389,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
                 {(n.kind[0] ?? "").toUpperCase()}
               </text>
               {lines.map((line, i) => (
-                <text key={i} x={n.x ?? 0} y={(n.y ?? 0) + r + 13 + i * 11} textAnchor="middle" fontSize={9.5} fill={isFocus ? C.highlightDark : C.ink} fontWeight={isFocus ? 700 : 400}>
+                <text key={i} x={n.x ?? 0} y={(n.y ?? 0) + r + 13 + i * 11} textAnchor="middle" fontSize={9.5} fill={isFocus ? C.terracottaDark : C.ink} fontWeight={isFocus ? 700 : 400}>
                   {line}
                 </text>
               ))}

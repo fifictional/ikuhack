@@ -11,7 +11,7 @@
  * Cypher query and nothing else in the UI changes.
  */
 
-export type LawNodeKind = "statute" | "section" | "regulation" | "requirement" | "case" | "protocol" | "standard";
+export type LawNodeKind = "statute" | "section" | "regulation" | "requirement" | "case" | "protocol" | "standard" | "hazard";
 
 export interface LawNode {
   id: string;
@@ -180,6 +180,47 @@ export const lawGraph: LawGraph = {
       excerpt: "A tenant must use the premises in a tenant-like manner — so damage caused by the household falls on the tenant, not the landlord.",
       url: "https://www.bailii.org/ew/cases/EWHC/QB/1953/",
     },
+    // Hazards (HHSRS) — the shared subject matter that links requirements together
+    {
+      id: "hazard-damp-mould",
+      kind: "hazard",
+      title: "Damp & mould",
+      citation: "HHSRS category — damp and mould growth",
+      excerpt: "A serious hazard linked to respiratory illness; the centre of Awaab's Law.",
+      url: "https://www.legislation.gov.uk/all?title=housing%20health%20and%20safety%20rating%20system",
+    },
+    {
+      id: "hazard-excess-cold",
+      kind: "hazard",
+      title: "Excess cold",
+      citation: "HHSRS category — excess cold",
+      excerpt: "A home that cannot be kept warm enough — usually a broken boiler or heating system.",
+      url: "https://www.legislation.gov.uk/all?title=housing%20health%20and%20safety%20rating%20system",
+    },
+    {
+      id: "hazard-electrical",
+      kind: "hazard",
+      title: "Electrical hazards",
+      citation: "HHSRS category — electrical hazards",
+      excerpt: "Faulty wiring or installations that create a shock or fire risk.",
+      url: "https://www.legislation.gov.uk/all?title=housing%20health%20and%20safety%20rating%20system",
+    },
+    {
+      id: "hazard-gas",
+      kind: "hazard",
+      title: "Gas & carbon monoxide",
+      citation: "HHSRS category — explosion and CO",
+      excerpt: "Gas leaks and carbon monoxide are both life-threatening hazards.",
+      url: "https://www.legislation.gov.uk/all?title=housing%20health%20and%20safety%20rating%20system",
+    },
+    {
+      id: "hazard-security",
+      kind: "hazard",
+      title: "Security",
+      citation: "HHSRS category — entry by intruders",
+      excerpt: "A home that cannot be secured (broken locks, windows, doors) leaves the tenant unsafe.",
+      url: "https://www.legislation.gov.uk/all?title=housing%20health%20and%20safety%20rating%20system",
+    },
     // Protocols and standards
     {
       id: "pre-action-protocol",
@@ -221,6 +262,20 @@ export const lawGraph: LawGraph = {
     { from: "awaab-2025", to: "awaab-2025-emergency", label: "prescribes" },
     { from: "smoke-co-2022", to: "smoke-co-2022-repair", label: "prescribes" },
     { from: "warren-v-keen", to: "lta-1985-s11-repair", label: "informs" },
+    // Relevance links: the same hazard grounds several requirements, and
+    // requirements that share a subject matter are related.
+    { from: "lta-1985-s9a-fitness", to: "hazard-damp-mould", label: "covers" },
+    { from: "awaab-2025-investigate", to: "hazard-damp-mould", label: "covers" },
+    { from: "awaab-2025-emergency", to: "hazard-damp-mould", label: "covers" },
+    { from: "lta-1985-s11-repair", to: "hazard-excess-cold", label: "covers" },
+    { from: "lta-1985-s11-repair", to: "hazard-electrical", label: "covers" },
+    { from: "lta-1985-s11-repair", to: "hazard-gas", label: "covers" },
+    { from: "lta-1985-s11-repair", to: "hazard-security", label: "covers" },
+    { from: "smoke-co-2022-repair", to: "hazard-gas", label: "covers" },
+    { from: "awaab-2025-investigate", to: "lta-1985-s9a-fitness", label: "relevant" },
+    { from: "awaab-2025-works", to: "lta-1985-s11-repair", label: "relevant" },
+    { from: "awaab-2025-emergency", to: "lta-1985-s11-6-access", label: "relevant" },
+    { from: "smoke-co-2022-repair", to: "lta-1985-s11", label: "relevant" },
   ],
 };
 

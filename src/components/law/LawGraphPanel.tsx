@@ -159,7 +159,7 @@ export function LawGraphPanel({ obligation, onClose }: { obligation: Obligation 
               <div>
                 <div className="flex items-center justify-between">
                   <p className="text-xs uppercase tracking-wide text-muted">The legal graph</p>
-                  <p className="text-xs text-muted">drag nodes · scroll to zoom · click to explore</p>
+                  <p className="text-xs text-muted">click a node to open its source · drag to move · scroll to zoom</p>
                 </div>
                 <ForceGraph graph={graph} focusId={effectiveId} highlight={highlight} onSelect={setSelectedId} />
                 <ul className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted">
@@ -290,8 +290,11 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
     dragRef.current = null;
     if (!d) return;
     if (d.type === "node") {
-      if (!d.moved && d.id) onSelect(d.id);
-      const node = nodesRef.current.find((n) => n.id === d.id);
+      const node = d.id ? nodesRef.current.find((n) => n.id === d.id) : undefined;
+      if (!d.moved && d.id) {
+        onSelect(d.id);
+        if (node?.url) window.open(node.url, "_blank", "noopener,noreferrer");
+      }
       if (node) {
         node.fx = null;
         node.fy = null;
@@ -352,7 +355,11 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
               onPointerEnter={() => setHovered(n.id)}
               onPointerLeave={() => setHovered(null)}
             >
-              {isFocus && <circle cx={n.x ?? 0} cy={n.y ?? 0} r={26} fill="var(--terracotta)" opacity={0.2} />}
+              {isFocus && (
+                <circle cx={n.x ?? 0} cy={n.y ?? 0} r={20} fill="var(--terracotta)" opacity={0.25}>
+                  <animate attributeName="r" values="20;36;20" dur="1.8s" repeatCount="indefinite" />
+                </circle>
+              )}
               <circle
                 cx={n.x ?? 0}
                 cy={n.y ?? 0}

@@ -47,7 +47,7 @@ npm run solana:keygen      # devnet keypair → .env.local + airdrop
 
 ## Machine gotcha
 
-The repo lives under `~/Documents`, which iCloud Drive syncs. If iCloud offloads files in `node_modules` or `.next`, every Node tool (tsx, next build, eslint) hangs at near-zero CPU while macOS re-downloads them. Check with `find node_modules -flags +dataless | head`. Fix: keep the repo outside iCloud-synced folders.
+Keep the repo outside iCloud-synced folders (Desktop, Documents); it lives at `~/dev/ikuhack`. When it was under `~/Documents`, iCloud offloaded files in `node_modules`, and every Node tool (tsx, next build, eslint) hung at near-zero CPU while macOS re-downloaded them. If a Node command hangs, check with `find node_modules -flags +dataless | head`.
 
 ## Conventions
 
@@ -59,4 +59,11 @@ The repo lives under `~/Documents`, which iCloud Drive syncs. If iCloud offloads
 
 ## Status
 
-Scaffold complete: engine + tests, schema, all API routes, tenant/landlord/demo/verify pages, integration clients. Not yet run against live API keys or a live database. See `docs/WORKSPLIT.md` for the task board.
+Scaffold complete: engine + tests, schema, all API routes, tenant/landlord/demo/verify pages, integration clients.
+
+- **Working and verified:** typed and photo reporting against live Gemini (`npm run eval:intake` scores 14/14), migrations, seed and sensor simulation on the local Docker TimescaleDB, and `next build`. Vercel builds each PR.
+- **Credit guard:** in place for ElevenLabs.
+- **Person A's Milestone 1:** done.
+- **Not yet run with live keys:** ElevenLabs voice and Solana anchoring.
+
+See `docs/WORKSPLIT.md` for the task board.

@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { getCase, recompute } from "@/lib/cases/service";
+import { getCachedChecks, getCaptureMethods } from "@/lib/evidence/authenticity";
 import type { Category, Obligation, Severity } from "@/lib/domain/types";
 import { CATEGORY_LABEL, FACT_PLAIN, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, factValuePlain, fmtDateTime, plainDuty, sourcePlain } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
@@ -27,6 +28,9 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
   const done = s.obligations.filter((o) => o.status === "met" || o.status === "met_late");
   const evidence = c.events.filter((e) => e.type === "EVIDENCE_ADDED");
   const severity = s.facts["issue.severity"]?.value as Severity | undefined;
+  const photoIds = evidence.flatMap((e) => (e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? [e.evidenceId] : []));
+  // Landlord view: the verdict recorded at upload and how each photo was taken, loaded up front.
+  const [checks, captures] = role === "landlord" ? await Promise.all([getCachedChecks(photoIds), getCaptureMethods(photoIds)]) : [{}, {}];
   // The single most pressing duty, for the tenant's "what happens next" card.
   const next = [...open].sort((a, b) => Number(b.status === "breached") - Number(a.status === "breached") || a.dueAt.localeCompare(b.dueAt))[0];
 
@@ -118,7 +122,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
         <Section title={`Evidence (${evidence.length})`}>
           {role === "landlord" ? (
             <div className="space-y-2">
-              {evidence.map((e) => (e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? <PhotoAuthenticity key={e.id} evidenceId={e.evidenceId} caption={e.caption} /> : null))}
+              {evidence.map((e) => (e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? <PhotoAuthenticity key={e.id} evidenceId={e.evidenceId} caption={e.caption} initial={checks[e.evidenceId]} capture={captures[e.evidenceId]} /> : null))}
             </div>
           ) : (
           <div className="grid grid-cols-3 gap-2">

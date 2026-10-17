@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CATEGORIES, SEVERITIES, type CaseEvent, type EventBody } from "@/lib/domain/types";
+import { LiveCamera } from "./LiveCamera";
 import { type FixCheckResponse, useCaseAction } from "./useCaseAction";
 
 /**
@@ -95,10 +96,13 @@ export function LandlordActions({ caseId, events }: { caseId: string; events: Ca
 
       <div className="space-y-2 border-t border-border pt-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">Finish the job</p>
-        <label className="flex cursor-pointer items-center justify-center rounded-md border border-dashed border-border bg-surface px-3 py-2 text-primary hover:border-primary hover:bg-primary-tint">
-          {afterPhoto ? `After photo: ${afterPhoto.name}` : "Add an after photo (recommended)"}
-          <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => setAfterPhoto(e.target.files?.[0] ?? null)} />
-        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="flex cursor-pointer items-center justify-center rounded-md border border-dashed border-border bg-surface px-3 py-2 text-center text-primary hover:border-primary hover:bg-primary-tint">
+            {afterPhoto ? `After photo: ${afterPhoto.name.startsWith("docket-live-") ? "taken now" : afterPhoto.name}` : "Upload an after photo"}
+            <input type="file" accept="image/*" className="sr-only" onChange={(e) => setAfterPhoto(e.target.files?.[0] ?? null)} />
+          </label>
+          <LiveCamera label="Take it now" onCapture={setAfterPhoto} />
+        </div>
         <button
           disabled={busy || checking}
           onClick={completeWithPhoto}

@@ -33,16 +33,13 @@ export function BeliefTimeline({
   const [state, setState] = useState<CaseState | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setIndex((i) => Math.min(i, stops.length - 1));
-  }, [stops.length]);
-
-  const at = stops[Math.min(index, stops.length - 1)] ?? new Date(now).getTime();
+  const safeIndex = Math.min(index, stops.length - 1);
+  const at = stops[safeIndex] ?? new Date(now).getTime();
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     const timer = setTimeout(() => {
+      setLoading(true);
       fetch(`/api/cases/${caseId}/state?at=${encodeURIComponent(new Date(at).toISOString())}`)
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error("bad status"))))
         .then((j) => !cancelled && setState(j.state as CaseState))
@@ -67,7 +64,7 @@ export function BeliefTimeline({
           {isNow && " (now)"}
         </p>
         <span>
-          {index + 1} / {stops.length}
+          {safeIndex + 1} / {stops.length}
         </span>
       </div>
 
@@ -76,7 +73,7 @@ export function BeliefTimeline({
         min={0}
         max={Math.max(stops.length - 1, 0)}
         step={1}
-        value={index}
+        value={safeIndex}
         onChange={(e) => setIndex(Number(e.target.value))}
         className="w-full accent-primary"
         aria-label="Choose a point in time"

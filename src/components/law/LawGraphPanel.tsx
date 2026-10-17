@@ -109,11 +109,6 @@ export function LawGraphPanel({ obligation, onClose }: { obligation: Obligation 
     }
   }, [obligation, graph, failed]);
 
-  // When a different duty opens the panel, reset to its own source node.
-  useEffect(() => {
-    setSelectedId(null);
-  }, [obligation?.legalBasis.sourceId]);
-
   const sourceId = obligation?.legalBasis.sourceId;
   const effectiveId = selectedId ?? sourceId ?? null;
   const focus = useMemo(() => (graph && effectiveId ? graph.nodes.find((n) => n.id === effectiveId) : undefined), [graph, effectiveId]);
@@ -220,7 +215,6 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
     sim.on("tick", () => setNodes([...simNodes]));
     simRef.current = sim;
     nodesRef.current = simNodes;
-    setNodes([...simNodes]);
     return () => {
       sim.stop();
     };
@@ -302,7 +296,7 @@ function ForceGraph({ graph, focusId, highlight, onSelect }: { graph: LawGraph; 
     }
   };
 
-  const onUp = (e: React.PointerEvent) => {
+  const onUp = () => {
     const d = dragRef.current;
     dragRef.current = null;
     if (!d) return;

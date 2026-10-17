@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // The persistent dev cache served stale pre-rebrand CSS after a restart. A cold compile on each
+    // `next dev` start is a few seconds slower but always reflects the code on disk.
+    turbopackFileSystemCacheForDev: false,
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

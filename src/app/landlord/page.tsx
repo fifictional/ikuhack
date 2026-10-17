@@ -1,15 +1,11 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CaseList } from "@/components/case/CaseList";
-import { ComplianceProofs } from "@/components/compliance/ComplianceProofs";
-import { ComplianceList } from "@/components/compliance/ComplianceList";
 import { listCases } from "@/lib/cases/service";
-import { getComplianceDuties } from "@/lib/compliance/service";
 import { getNow } from "@/lib/db/settings";
 import { DEMO } from "@/lib/demo";
-import { getComplianceProofs } from "@/lib/solana/proof";
 
-export default function LandlordDashboard() {
+export default function LandlordOverview() {
   return (
     <div className="space-y-6">
       <div>
@@ -17,21 +13,21 @@ export default function LandlordDashboard() {
         <h1 className="text-2xl font-semibold">Repairs compliance</h1>
       </div>
       <Suspense fallback={<p className="text-sm text-muted">Loading portfolio…</p>}>
-        <Portfolio />
+        <Overview />
       </Suspense>
     </div>
   );
 }
 
-async function Portfolio() {
+/**
+ * The "am I on the clock?" view: landlord obligations arising from tenant reports. Recurring
+ * certificates live on /landlord/certificates and their proofs on /landlord/proof, so this
+ * page needs only the case log — no compliance duties, no Solana.
+ */
+async function Overview() {
   await connection();
-  const [cases, now, compliance, proofs] = await Promise.all([
-    listCases({ landlordId: DEMO.landlordId }),
-    getNow(),
-    getComplianceDuties(DEMO.landlordId),
-    getComplianceProofs(DEMO.landlordId),
-  ]);
-  const properties = [...new Map(compliance.map((d) => [d.propertyId, { id: d.propertyId, address: d.propertyAddress }])).values()];
+  const [cases, now] = await Promise.all([listCases({ landlordId: DEMO.landlordId }), getNow()]);
+
   // "Legal deadlines" means fixed periods set by law (e.g. Awaab's Law), not Docket's targets for "reasonable time" duties.
   const obligations = cases.flatMap((c) => c.state?.obligations.filter((o) => o.party === "landlord" && o.legalBasis.deadline === "law") ?? []);
   const breached = obligations.filter((o) => o.status === "breached").length;
@@ -56,8 +52,6 @@ async function Portfolio() {
         </div>
         <CaseList cases={cases} hrefBase="/landlord/cases" party="landlord" now={now.toISOString()} />
       </section>
-      <ComplianceList duties={compliance} />
-      <ComplianceProofs proofs={proofs} properties={properties} />
     </div>
   );
 }

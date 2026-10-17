@@ -12,13 +12,18 @@ import type { EventBody } from "@/lib/domain/types";
  * Safe to re-run: wipes demo data first.
  */
 const daysAgo = (d: number, h = 9) => new Date(Date.now() - d * 86_400_000 + (h - 9) * 3_600_000);
+const monthsAgo = (m: number) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - m);
+  return d;
+};
 
 const fact = (key: string, value: unknown, kind: string, label?: string) =>
   ({ type: "FACT_ASSERTED", key, value, source: { kind, label } }) as EventBody;
 
 async function main() {
   const sql = db();
-  await sql`TRUNCATE anchor_leaves, anchors, evidence, case_revisions, case_events, cases, properties, parties, app_settings, sensor_readings CASCADE`;
+  await sql`TRUNCATE anchor_leaves, anchors, evidence, compliance_records, case_revisions, case_events, cases, properties, parties, app_settings, sensor_readings CASCADE`;
 
   await sql`INSERT INTO parties (id, role, name, email, preferred_language) VALUES
     (${DEMO.tenantId}, 'tenant', 'Amira Haddad', 'amira@example.test', 'en'),
@@ -37,6 +42,18 @@ async function main() {
       VALUES (${addr + ", London"}, 'E3 2AB', 'social', ${DEMO.landlordId}, ${t.id}) RETURNING id`;
     others.push(p.id as string);
   }
+
+  // Recurring compliance: a mix of healthy, due and breached records.
+  await sql`INSERT INTO compliance_records (property_id, kind, performed_at, copy_sent_at) VALUES
+    (${DEMO.tenantPropertyId}, 'gas_safety', ${monthsAgo(11)}, ${monthsAgo(11)}),
+    (${DEMO.tenantPropertyId}, 'eicr', ${monthsAgo(50)}, ${monthsAgo(50)}),
+    (${others[0]}, 'gas_safety', ${monthsAgo(13)}, NULL),
+    (${others[0]}, 'eicr', ${monthsAgo(61)}, ${monthsAgo(61)}),
+    (${others[1]}, 'gas_safety', ${monthsAgo(5)}, ${monthsAgo(5)}),
+    (${others[1]}, 'eicr', ${monthsAgo(54)}, NULL),
+    (${others[2]}, 'eicr', ${monthsAgo(20)}, ${monthsAgo(20)}),
+    (${others[3]}, 'gas_safety', ${monthsAgo(2)}, NULL),
+    (${others[3]}, 'eicr', ${monthsAgo(59)}, ${monthsAgo(59)})`;
 
   // Historical cases: one resolved on time, one breached, one awaiting access.
   const resolved = await createCase({

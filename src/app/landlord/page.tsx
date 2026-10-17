@@ -1,7 +1,9 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CaseList } from "@/components/case/CaseList";
+import { ComplianceList } from "@/components/compliance/ComplianceList";
 import { listCases } from "@/lib/cases/service";
+import { getComplianceDuties } from "@/lib/compliance/service";
 import { getNow } from "@/lib/db/settings";
 import { DEMO } from "@/lib/demo";
 
@@ -21,7 +23,11 @@ export default function LandlordDashboard() {
 
 async function Portfolio() {
   await connection();
-  const [cases, now] = await Promise.all([listCases({ landlordId: DEMO.landlordId }), getNow()]);
+  const [cases, now, compliance] = await Promise.all([
+    listCases({ landlordId: DEMO.landlordId }),
+    getNow(),
+    getComplianceDuties(DEMO.landlordId),
+  ]);
   // "Legal deadlines" means fixed periods set by law (e.g. Awaab's Law), not Docket's targets for "reasonable time" duties.
   const obligations = cases.flatMap((c) => c.state?.obligations.filter((o) => o.party === "landlord" && o.legalBasis.deadline === "law") ?? []);
   const breached = obligations.filter((o) => o.status === "breached").length;
@@ -40,6 +46,7 @@ async function Portfolio() {
         <Stat label="Due in 24h" value={dueToday} tone={dueToday ? "warn" : undefined} />
         <Stat label="Met on time" value={`${onTime}%`} />
       </div>
+      <ComplianceList duties={compliance} />
       <CaseList cases={cases} hrefBase="/landlord/cases" party="landlord" now={now.toISOString()} />
     </div>
   );

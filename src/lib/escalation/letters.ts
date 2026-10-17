@@ -129,4 +129,4 @@ export function generateLetter(route: EscalationRoute, ctx: LetterContext): stri
       return ombudsmanReferral(ctx);
   }
 }
-// TODO(person B): let Gemini *polish* tone/translate, but keep facts, dates and citations from the engine verbatim.
+// Tone/translation is applied by src/lib/ai/letter-polish.ts; the facts, dates and citations above stay verbatim.

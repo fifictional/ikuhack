@@ -109,6 +109,19 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               ) : null,
             )}
           </div>
+          {evidence.some((e) => e.type === "EVIDENCE_ADDED" && e.kind !== "photo") && (
+            <ul className="space-y-1 text-sm">
+              {evidence.map((e) =>
+                e.type === "EVIDENCE_ADDED" && e.kind !== "photo" ? (
+                  <li key={e.id}>
+                    <a href={`/api/evidence/${e.evidenceId}`} target="_blank" className="font-medium text-teal underline">
+                      {e.caption ?? e.kind}
+                    </a>
+                  </li>
+                ) : null,
+              )}
+            </ul>
+          )}
           <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-teal underline" target="_blank">
             Download evidence bundle (PDF)
           </a>

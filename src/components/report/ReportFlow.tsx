@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { IntakeDraft } from "@/lib/ai/intake";
 import { CATEGORY_LABEL } from "@/lib/ui/labels";
+import { VoiceNoteButton } from "./VoiceNoteButton";
 import { VoiceReport } from "./VoiceReport";
 
 /**
  * Text/photo reporting: describe → Gemini drafts → tenant answers any follow-up questions (in their language)
  * → confirms → case created → photos stored as evidence.
- * TODO(person A): voice-note button (record → /api/transcribe → fills the textarea), accessibility pass, i18n of UI copy.
+ * TODO(person A): accessibility pass, i18n of UI copy.
  */
 
 const URGENCY: Record<IntakeDraft["assessedSeverity"], { label: string; tone: string }> = {
@@ -91,12 +92,13 @@ export function ReportFlow() {
       </div>
 
       {mode === "voice" ? (
-        <VoiceReport />
+        <VoiceReport onFallback={() => setMode("type")} />
       ) : !draft ? (
         <div className="space-y-3">
           <textarea value={text} onChange={(e) => setText(e.target.value)} rows={5}
             placeholder="e.g. Black mould is spreading on the bedroom wall and my baby keeps coughing"
             className="w-full rounded-lg border border-border bg-surface p-3" />
+          <VoiceNoteButton onText={(t) => setText((prev) => (prev ? `${prev} ${t}` : t))} />
           <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface px-3 py-3 text-sm font-medium text-teal hover:border-teal hover:bg-teal-tint">
             {photos.length ? `${photos.length} photo${photos.length > 1 ? "s" : ""} added — change` : "Add photos (optional)"}
             <input type="file" accept="image/*" multiple capture="environment" className="sr-only"

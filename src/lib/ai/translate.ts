@@ -3,7 +3,7 @@ import { generateStructured } from "./gemini";
 
 const LANGUAGE_NAME: Record<string, string> = {
   en: "English", es: "Spanish", fr: "French", de: "German", pl: "Polish", pt: "Portuguese",
-  ar: "Arabic", bn: "Bengali", ur: "Urdu", hi: "Hindi", zh: "Chinese", ro: "Romanian", it: "Italian", tr: "Turkish",
+  ar: "Arabic", th: "Thai", ru: "Russian", bn: "Bengali", ur: "Urdu", hi: "Hindi", zh: "Chinese", ro: "Romanian", it: "Italian", tr: "Turkish",
 };
 
 // Translations are deterministic enough to reuse; this keeps repeat taps off the 5 req/min Gemini limit.

@@ -4,6 +4,7 @@ import { IntakeSchema, intakeToFacts } from "@/lib/ai/intake";
 import { createCase, listCases } from "@/lib/cases/service";
 import { db } from "@/lib/db/client";
 import { DEMO } from "@/lib/demo";
+import { getRole } from "@/lib/session";
 import { handle } from "@/lib/http";
 
 const CreateSchema = z.object({
@@ -26,9 +27,12 @@ export const POST = handle(async (req: Request) => {
   return Response.json(result, { status: 201 });
 });
 
-export const GET = handle(async (req: Request) => {
+export const GET = handle(async () => {
   await connection();
-  const role = new URL(req.url).searchParams.get("role");
+  // Scope the list to the signed-in persona. The role comes from the cookie, not the query
+  // string, so a tenant can't ask for the landlord's portfolio by editing the URL.
+  const role = await getRole();
+  if (!role) return Response.json({ error: "Not signed in" }, { status: 401 });
   const cases = await listCases(role === "landlord" ? { landlordId: DEMO.landlordId } : { tenantId: DEMO.tenantId });
   return Response.json({ cases });
 });

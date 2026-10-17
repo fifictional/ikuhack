@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Archivo, Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { Logo } from "@/components/brand/Logo";
+import { RoleNavLink, SessionNav } from "@/components/SessionNav";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -23,11 +25,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" aria-label="Docket home" className="mr-2">
               <Logo size={24} />
             </Link>
-            <Link href="/tenant" className="font-medium text-ink/80 hover:text-primary">Tenant</Link>
-            <Link href="/landlord" className="font-medium text-ink/80 hover:text-primary">Landlord</Link>
+            {/* Both read the session cookie, so each needs its own boundary to keep the header static. */}
+            <Suspense fallback={null}>
+              <RoleNavLink />
+            </Suspense>
             <Link href="/proof" className="hidden font-medium text-ink/80 hover:text-primary sm:inline">Proof</Link>
             <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-primary sm:inline">Verify</Link>
             <Link href="/demo" className="ml-auto hidden font-medium text-ink/80 hover:text-primary sm:inline">Demo</Link>
+            {/* Session read must live in its own boundary so the header still prerenders. */}
+            <Suspense fallback={null}>
+              <SessionNav />
+            </Suspense>
           </nav>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>

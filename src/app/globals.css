@@ -12,14 +12,14 @@
   --ink-muted: #6b6b6b;
   --primary: #1a1a1a;
   --primary-dark: #000000;
-  --primary-tint: #ededea;
+  --primary-tint: #ededed;
   --highlight: #4a4a4a;
   --highlight-dark: #333333;
-  --highlight-tint: #e8e8e5;
-  --panel: #efefec;
-  --page: #f7f7f5;
+  --highlight-tint: #e8e8e8;
+  --panel: #efefef;
+  --page: #f7f7f7;
   --white: #ffffff;
-  --line: #e4e4e0;
+  --line: #e4e4e4;
   /* Logo door: mid grey so the house detail still reads in greyscale. */
   --logo-door: #8a8a8a;
 

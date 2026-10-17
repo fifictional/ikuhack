@@ -74,7 +74,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
             {c.revisions.map((r, i) => (
               <li key={i} className="text-sm">
                 <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(r.at.toISOString())}</span>
-                <span className={r.kind === "obligation_breached" ? "text-danger" : r.kind === "obligation_abandoned" || r.kind === "obligation_reopened" ? "text-terracotta-dark" : ""}>{r.summary}</span>
+                <span className={r.kind === "obligation_breached" ? "text-danger" : r.kind === "obligation_abandoned" || r.kind === "obligation_reopened" ? "text-highlight-dark" : ""}>{r.summary}</span>
                 {role === "tenant" && i < 3 && <span className="ml-2 align-middle"><ListenButton caseId={caseId} text={r.summary.slice(0, 600)} /></span>}
               </li>
             ))}
@@ -123,7 +123,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               {evidence.map((e) =>
                 e.type === "EVIDENCE_ADDED" && e.kind !== "photo" ? (
                   <li key={e.id}>
-                    <a href={`/api/evidence/${e.evidenceId}`} target="_blank" className="font-medium text-teal underline">
+                    <a href={`/api/evidence/${e.evidenceId}`} target="_blank" className="font-medium text-primary underline">
                       {e.caption ?? e.kind}
                     </a>
                   </li>
@@ -131,7 +131,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               )}
             </ul>
           )}
-          <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-teal underline" target="_blank">
+          <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-primary underline" target="_blank">
             Download evidence bundle (PDF)
           </a>
         </Section>
@@ -159,7 +159,7 @@ function ObligationRow({ o, now, role, landlordName }: { o: Obligation; now: str
             <p>{o.reason}</p>
             <p className="mt-1">
               {o.legalBasis.url ? (
-                <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="text-teal underline">{o.legalBasis.citation}</a>
+                <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="text-primary underline">{o.legalBasis.citation}</a>
               ) : (
                 o.legalBasis.citation
               )}
@@ -169,7 +169,7 @@ function ObligationRow({ o, now, role, landlordName }: { o: Obligation; now: str
           <p className="text-xs text-muted">
             {kind} ·{" "}
             {o.legalBasis.url ? (
-              <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="underline hover:text-teal">{o.legalBasis.citation}</a>
+              <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="underline hover:text-primary">{o.legalBasis.citation}</a>
             ) : (
               o.legalBasis.citation
             )}
@@ -201,7 +201,7 @@ function NextStep({ o, landlordName, now, caseId }: { o: Obligation | undefined;
   }
   const breached = o.status === "breached";
   return (
-    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger bg-surface" : "border-teal bg-teal-tint"}`}>
+    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger bg-surface" : "border-primary bg-primary-tint"}`}>
       <p className="text-sm text-muted">{breached ? "Deadline missed" : "What happens next"}</p>
       <p className="text-lg font-semibold">
         {plainDuty(o, landlordName)} {breached ? "— this was due" : "by"} {fmtDateTime(o.dueAt)}

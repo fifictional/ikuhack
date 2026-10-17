@@ -85,7 +85,7 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
 
   if (state === "review") {
     return (
-      <div className="space-y-2 rounded-lg border border-teal bg-teal-tint p-3">
+      <div className="space-y-2 rounded-lg border border-primary bg-primary-tint p-3">
         <label className="block text-sm font-medium text-ink" htmlFor="voice-note-draft">
           Here&apos;s what we heard. Fix anything that&apos;s wrong:
         </label>
@@ -103,7 +103,7 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
               if (draft.trim()) onText(draft.trim());
               setState("idle");
             }}
-            className="flex-1 rounded-lg bg-teal px-3 py-2 text-sm font-semibold text-white hover:bg-teal-dark"
+            className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary-dark"
           >
             Add to my report
           </button>
@@ -114,18 +114,18 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
 
   if (state === "recording" || state === "paused") {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-terracotta bg-terracotta-tint px-3 py-2 text-sm">
-        <span aria-hidden className={`h-2.5 w-2.5 rounded-full bg-terracotta ${state === "recording" ? "animate-pulse" : "opacity-40"}`} />
-        <span className="font-mono text-terracotta-dark" aria-live="polite">
+      <div className="flex items-center gap-2 rounded-lg border border-highlight bg-highlight-tint px-3 py-2 text-sm">
+        <span aria-hidden className={`h-2.5 w-2.5 rounded-full bg-highlight ${state === "recording" ? "animate-pulse" : "opacity-40"}`} />
+        <span className="font-mono text-highlight-dark" aria-live="polite">
           {state === "paused" ? `Paused ${clock}` : `Recording ${clock}`}
         </span>
         <button
           onClick={state === "recording" ? pause : resume}
-          className="ml-auto rounded-md border border-teal bg-surface px-3 py-1 font-medium text-teal hover:bg-teal-tint"
+          className="ml-auto rounded-md border border-primary bg-surface px-3 py-1 font-medium text-primary hover:bg-primary-tint"
         >
           {state === "recording" ? "Pause" : "Resume"}
         </button>
-        <button onClick={() => recorder.current?.stop()} className="rounded-md bg-teal px-3 py-1 font-semibold text-white hover:bg-teal-dark">
+        <button onClick={() => recorder.current?.stop()} className="rounded-md bg-primary px-3 py-1 font-semibold text-white hover:bg-primary-dark">
           Done
         </button>
       </div>
@@ -138,9 +138,9 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
         type="button"
         onClick={start}
         disabled={state === "transcribing"}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-3 text-sm font-medium text-teal hover:border-teal hover:bg-teal-tint disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-3 text-sm font-medium text-primary hover:border-primary hover:bg-primary-tint disabled:opacity-60"
       >
-        <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-teal" />
+        <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-primary" />
         {state === "transcribing" ? "Writing it down…" : "Record a voice note instead"}
       </button>
       {error && <p className="text-sm text-danger">{error}</p>}

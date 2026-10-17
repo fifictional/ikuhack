@@ -42,7 +42,7 @@ export function ListenButton({ caseId, text }: { caseId: string; text: string })
       <button
         onClick={listen}
         disabled={state === "loading"}
-        className="rounded-lg border border-teal px-3 py-1.5 text-sm font-medium text-teal hover:bg-teal-tint disabled:opacity-60"
+        className="rounded-lg border border-primary px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary-tint disabled:opacity-60"
       >
         {state === "loading" ? "Loading…" : state === "playing" ? "■ Stop" : "🔊 Listen"}
       </button>

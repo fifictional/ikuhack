@@ -18,15 +18,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en-GB" className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-border bg-cream">
+        <header className="border-b border-border bg-background">
           <nav className="mx-auto flex max-w-5xl items-center gap-x-4 px-4 py-3 text-sm sm:gap-x-6">
             <Link href="/" aria-label="Docket home" className="mr-2">
               <Logo size={24} />
             </Link>
-            <Link href="/tenant" className="font-medium text-ink/80 hover:text-teal">Tenant</Link>
-            <Link href="/landlord" className="font-medium text-ink/80 hover:text-teal">Landlord</Link>
-            <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-teal sm:inline">Verify</Link>
-            <Link href="/demo" className="ml-auto hidden font-medium text-ink/80 hover:text-teal sm:inline">Demo</Link>
+            <Link href="/tenant" className="font-medium text-ink/80 hover:text-primary">Tenant</Link>
+            <Link href="/landlord" className="font-medium text-ink/80 hover:text-primary">Landlord</Link>
+            <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-primary sm:inline">Verify</Link>
+            <Link href="/demo" className="ml-auto hidden font-medium text-ink/80 hover:text-primary sm:inline">Demo</Link>
           </nav>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>

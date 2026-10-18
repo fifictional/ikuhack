@@ -1,7 +1,6 @@
 /**
- * Fixed ids for seeded demo personas. There is no real auth in the hackathon
- * build — the tenant and landlord views are scoped to these ids.
- * TODO(stretch): replace with real sign-in (magic link) before any real users.
+ * Ids of the seeded sample tenant and landlord accounts. Sign-in currently selects one of these
+ * (see src/lib/session.ts); swapping in real accounts (e.g. magic-link sign-in) replaces this file.
  */
 export const DEMO = {
   tenantId: "11111111-1111-4111-8111-111111111111",

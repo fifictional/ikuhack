@@ -2,6 +2,9 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { VerifyForm } from "@/components/verify/VerifyForm";
 import { explorerUrl, listAnchors } from "@/lib/solana/anchor";
+import { fmtDateTime } from "@/lib/ui/labels";
+
+export const metadata = { title: "Verify a record" };
 
 export default function VerifyPage() {
   return (
@@ -28,7 +31,7 @@ async function RecentAnchors() {
     <section className="space-y-2 rounded-xl border border-border bg-surface p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Recent anchored batches</h2>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted">Nothing anchored yet. Anchor a case from /demo, or wait for the daily cron.</p>
+        <p className="text-sm text-muted">No records have been anchored yet. Records are anchored automatically every day.</p>
       ) : (
         <ul className="space-y-3">
           {rows.map((a) => (
@@ -36,7 +39,7 @@ async function RecentAnchors() {
               <div className="min-w-0">
                 <p className="break-all font-mono text-xs text-muted">{a.merkle_root}</p>
                 <p className="text-xs text-muted">
-                  {a.leaf_count} records · {new Date(a.created_at).toLocaleString("en-GB")}
+                  {a.leaf_count} {a.leaf_count === 1 ? "record" : "records"} · {fmtDateTime(new Date(a.created_at).toISOString())}
                 </p>
               </div>
               {a.tx_signature && (

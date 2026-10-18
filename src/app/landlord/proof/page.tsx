@@ -5,7 +5,7 @@ import { getComplianceDuties } from "@/lib/compliance/service";
 import { DEMO } from "@/lib/demo";
 import { getComplianceProofs } from "@/lib/solana/proof";
 
-export const metadata = { title: "Proof of compliance — Docket" };
+export const metadata = { title: "Proof of compliance" };
 
 /**
  * The evidence side: every inspection fingerprinted and anchored on Solana. This is the only

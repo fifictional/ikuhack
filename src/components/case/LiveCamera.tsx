@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { LIVE_PREFIX } from "@/lib/evidence/live";
 import { useT } from "@/components/i18n/I18n";
+import { CameraIcon } from "@/components/icons";
 
 /**
  * Take a photo inside Docket instead of picking a file. The picture comes straight from the camera stream, so the
@@ -82,7 +83,10 @@ export function LiveCamera({ onCapture, label }: { onCapture: (file: File) => vo
         onClick={() => { setError(null); setOpen(true); }}
         className="cursor-pointer rounded-lg border border-border bg-surface px-3 py-2 text-sm hover:border-primary"
       >
-        📷 {label ?? t("camera.take")}
+        <span className="inline-flex items-center justify-center gap-1.5">
+          <CameraIcon />
+          {label ?? t("camera.take")}
+        </span>
       </button>
       {open && (
         <div role="dialog" aria-modal="true" aria-label={t("camera.title")} className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ink/90 p-4">

@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { CaseView } from "@/components/case/CaseView";
 
+export const metadata = { title: "Repair case" };
+
 export default function TenantCasePage({ params }: PageProps<"/tenant/cases/[id]">) {
   // params is runtime data, so it must be read inside <Suspense> (Cache Components).
   return (

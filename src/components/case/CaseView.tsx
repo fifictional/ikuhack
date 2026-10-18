@@ -14,6 +14,7 @@ import { ListenButton } from "./ListenButton";
 import { BeliefTimeline } from "./BeliefTimeline";
 import { ObligationList } from "./ObligationList";
 import { TenantActions } from "./TenantActions";
+import { InfoIcon, ScaleIcon } from "@/components/icons";
 
 /**
  * Shared case page for both parties: same facts, same clocks, same history.
@@ -129,7 +130,8 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
             <Section title={t("case.thingsToKnow")}>
               {s.conflicts.map((cf) => (
                 <p key={cf.key} className="text-sm">
-                  ⚖️ Sources disagree on <b>{FACT_PLAIN[cf.key]}</b>:{" "}
+                  <ScaleIcon className="me-1.5 align-[-3px] text-muted" />
+                  Sources disagree on <b>{FACT_PLAIN[cf.key]}</b>:{" "}
                   {cf.candidates.map((b) => `${sourcePlain(b.source)} says "${factValuePlain(b.value)}"`).join(" vs ")}.{" "}
                   {cf.resolution === "safety_first"
                     ? "Docket takes the safer view until this is resolved."
@@ -138,7 +140,8 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               ))}
               {s.notes.map((n) => (
                 <p key={n} className="text-sm">
-                  ℹ️ {n}
+                  <InfoIcon className="me-1.5 align-[-3px] text-muted" />
+                  {n}
                 </p>
               ))}
             </Section>

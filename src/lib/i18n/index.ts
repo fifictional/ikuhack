@@ -32,6 +32,8 @@ export function formatDateTime(iso: string, locale: Locale): string {
     weekday: "short",
     day: "numeric",
     month: "short",
+    // Long-range deadlines (certificates) need the year when it isn't this year.
+    ...(new Date(iso).getUTCFullYear() !== new Date().getUTCFullYear() ? { year: "numeric" as const } : {}),
     hour: "2-digit",
     minute: "2-digit",
   });

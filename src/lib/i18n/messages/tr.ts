@@ -21,14 +21,14 @@ export const tr: Messages = {
   "home.landlordBody": "Tüm evleriniz için anlık yasal süreler ve uyumu kanıtlayan bir kayıt geçmişi.",
 
   "login.title": "docket'e giriş yapın",
-  "login.demoNote": "Hackathon sürümü: herhangi bir e-posta ve şifre çalışır. Gerçek hesap yoktur.",
+  "login.intro": "Onarımlarınızı, sürelerinizi ve kanıtlarınızı görmek için giriş yapın.",
   "login.error": "Lütfen bir e-posta ve şifre girin.",
   "login.iAmA": "Ben bir",
   "login.tenant": "Kiracıyım",
   "login.landlord": "Ev sahibiyim",
   "login.email": "E-posta",
   "login.password": "Şifre",
-  "login.passwordPlaceholder": "herhangi bir şey",
+  "login.passwordPlaceholder": "Şifreniz",
   "login.submit": "Giriş yap",
   "common.loading": "Yükleniyor…",
 
@@ -198,12 +198,12 @@ export const tr: Messages = {
   "escalation.council_environmental_health": "Belediyeye bildir (environmental health)",
   "escalation.pre_action_letter": "Talep mektubu (pre-action protocol)",
 
-  "listen.listen": "🔊 Dinle",
+  "listen.listen": "Dinle",
   "listen.stop": "■ Durdur",
   "listen.error": "Oynatılamadı",
 
   // Added for the re-laid-out case page
-  "case.landlord": "Ev sahibi",
+  "case.landlord": "Ev sahibiniz",
   "case.landlordLabel": "Ev sahibi: {name}",
   "case.overdueCount": "Geciken: {n}",
   "case.noChanges": "Henüz değişiklik yok.",
@@ -213,7 +213,7 @@ export const tr: Messages = {
   "case.shouldHaveFixed": "Ev sahibinizin bunu {date} tarihine kadar onarması gerekiyordu",
   "case.canEscalateNow": "Artık bunu ileri taşıyabilirsiniz.",
   "case.seeOptions": "Seçeneklerinizi görün →",
-  "listen.all": "🔊 Tümünü dinle",
+  "listen.all": "Tümünü dinle",
   "dutyType.target": "Docket hedefi",
   "dutyType.lawAwaab": "Yasal süre · Awaab's Law",
   "dutyType.reasonable": "Yasal yükümlülük · makul süre",

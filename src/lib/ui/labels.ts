@@ -34,7 +34,7 @@ export const ESCALATION_LABEL: Record<EscalationRoute, string> = {
 export function describeEvent(e: CaseEvent): string {
   switch (e.type) {
     case "REPORTED": return `Reported via ${e.channel}: “${e.description}”`;
-    case "FACT_ASSERTED": return `${e.source.label ?? e.source.kind} noted ${e.key} = ${String(e.value)}${e.note ? ` (${e.note})` : ""}`;
+    case "FACT_ASSERTED": return `${sourcePlain(e.source)} noted ${FACT_PLAIN[e.key]}: ${factValueFor(e.key, e.value)}${e.note ? ` (${e.note})` : ""}`;
     case "FACT_RETRACTED": return `Retracted a fact: ${e.reason}`;
     case "EVIDENCE_ADDED": return `Evidence added (${e.kind})${e.caption ? `: ${e.caption}` : ""}`;
     case "ACKNOWLEDGED": return "Landlord acknowledged the report";
@@ -90,6 +90,13 @@ export const FACT_PLAIN: Record<FactKey, string> = {
   "fix.verified": "whether the repair worked",
 };
 
+/** A fact's value in words, using the readable labels for categories and severities. */
+export function factValueFor(key: FactKey, v: unknown): string {
+  if (key === "issue.category" && typeof v === "string" && v in CATEGORY_LABEL) return CATEGORY_LABEL[v as Category];
+  if (key === "issue.severity" && typeof v === "string" && v in SEVERITY_PLAIN) return SEVERITY_PLAIN[v as Severity];
+  return factValuePlain(v);
+}
+
 export const factValuePlain = (v: unknown) =>
   v === true ? "yes" : v === false ? "no" : typeof v === "string" ? v.replaceAll("_", " ") : String(v);
 
@@ -111,16 +118,28 @@ export const SEVERITY_PLAIN: Record<Severity, string> = {
   routine: "Routine",
 };
 
+/** True when the date falls in a different calendar year from today, so it needs the year shown. */
+export const otherYear = (iso: string) => new Date(iso).getUTCFullYear() !== new Date().getUTCFullYear();
+
+/** "Sun 18 Oct, 20:10", or "Wed 17 Feb 2027, 20:01" when it isn't this year. */
 export const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  new Date(iso).toLocaleString("en-GB", {
+    timeZone: "Europe/London",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    ...(otherYear(iso) ? { year: "numeric" } : {}),
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 /** "Sat 17 Oct" — short day label for timeline ends. */
 export const fmtDay = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short" });
+  new Date(iso).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", ...(otherYear(iso) ? { year: "numeric" } : {}) });
 
 /** "Sunday 25 October" — day-group heading for the change feed. */
 export const fmtDayLong = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "long", day: "numeric", month: "long" });
+  new Date(iso).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "long", day: "numeric", month: "long", ...(otherYear(iso) ? { year: "numeric" } : {}) });
 
 /** "20:10" — time only, for the change feed. */
 export const fmtTime = (iso: string) =>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CATEGORIES, SEVERITIES, type CaseEvent, type EventBody } from "@/lib/domain/types";
+import { CATEGORY_LABEL, SEVERITY_PLAIN } from "@/lib/ui/labels";
 import { LiveCamera } from "./LiveCamera";
 import { type FixCheckResponse, useCaseAction } from "./useCaseAction";
 
@@ -91,8 +92,8 @@ export function LandlordActions({ caseId, events }: { caseId: string; events: Ca
             onChange={(e) => setProKind(e.target.value as typeof proKind)}
             className="rounded-md border border-border bg-surface px-2 py-1 text-xs"
           >
-            <option value="contractor">contractor</option>
-            <option value="surveyor">surveyor</option>
+            <option value="contractor">Contractor</option>
+            <option value="surveyor">Surveyor</option>
           </select>
         </div>
         <select
@@ -105,7 +106,7 @@ export function LandlordActions({ caseId, events }: { caseId: string; events: Ca
           </option>
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {CATEGORY_LABEL[c]}
             </option>
           ))}
         </select>
@@ -119,7 +120,7 @@ export function LandlordActions({ caseId, events }: { caseId: string; events: Ca
           </option>
           {SEVERITIES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {SEVERITY_PLAIN[s]}
             </option>
           ))}
         </select>

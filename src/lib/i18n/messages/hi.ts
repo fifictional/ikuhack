@@ -21,14 +21,14 @@ export const hi: Messages = {
   "home.landlordBody": "आपके सभी घरों की कानूनी समय-सीमाएँ एक जगह, और नियमों के पालन का प्रमाण देने वाला रिकॉर्ड।",
 
   "login.title": "docket में साइन इन करें",
-  "login.demoNote": "हैकाथॉन संस्करण: कोई भी ईमेल और पासवर्ड चलेगा। कोई असली खाते नहीं हैं।",
+  "login.intro": "अपनी मरम्मतें, समय-सीमाएँ और सबूत देखने के लिए साइन इन करें।",
   "login.error": "कृपया ईमेल और पासवर्ड डालें।",
   "login.iAmA": "मैं हूँ",
   "login.tenant": "किरायेदार",
   "login.landlord": "मकान मालिक",
   "login.email": "ईमेल",
   "login.password": "पासवर्ड",
-  "login.passwordPlaceholder": "कुछ भी",
+  "login.passwordPlaceholder": "आपका पासवर्ड",
   "login.submit": "साइन इन करें",
   "common.loading": "लोड हो रहा है…",
 
@@ -198,12 +198,12 @@ export const hi: Messages = {
   "escalation.council_environmental_health": "काउंसिल को रिपोर्ट करें (environmental health)",
   "escalation.pre_action_letter": "दावा-पत्र (pre-action protocol)",
 
-  "listen.listen": "🔊 सुनें",
+  "listen.listen": "सुनें",
   "listen.stop": "■ रोकें",
   "listen.error": "चल नहीं सका",
 
   // Added for the re-laid-out case page
-  "case.landlord": "मकान मालिक",
+  "case.landlord": "आपके मकान मालिक",
   "case.landlordLabel": "मकान मालिक: {name}",
   "case.overdueCount": "देर से: {n}",
   "case.noChanges": "अभी कोई बदलाव नहीं।",
@@ -213,7 +213,7 @@ export const hi: Messages = {
   "case.shouldHaveFixed": "आपके मकान मालिक को इसे {date} तक ठीक कर देना चाहिए था",
   "case.canEscalateNow": "अब आप मामला आगे बढ़ा सकते हैं।",
   "case.seeOptions": "अपने विकल्प देखें →",
-  "listen.all": "🔊 सब सुनें",
+  "listen.all": "सब सुनें",
   "dutyType.target": "Docket का लक्ष्य",
   "dutyType.lawAwaab": "कानूनी समय-सीमा · Awaab's Law",
   "dutyType.reasonable": "कानूनी दायित्व · उचित समय",

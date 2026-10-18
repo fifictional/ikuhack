@@ -24,7 +24,7 @@ export async function LawCheckFooter() {
   } catch {
     return (
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs text-muted">
-        <p>Legal sources: check unavailable.</p>
+        <p>Legal sources: couldn&apos;t check just now.</p>
         <CheckNowButton />
       </div>
     );
@@ -40,17 +40,25 @@ export async function LawCheckFooter() {
       <p>
         {lastChecked ? (
           <>
-            Legal sources checked <span className="font-medium text-foreground">{fmtDateTime(lastChecked.toISOString())}</span>
-            {" · "}
-            {count("current")} current
-            {" · "}
-            <span className={amended > 0 ? "font-medium text-warn" : undefined}>{amended} amended</span>
-            {" · "}
-            {count("manual")} manual
-            <span className="hidden sm:inline"> (of {total})</span>
+            Legal sources last checked <span className="font-medium text-foreground">{fmtDateTime(lastChecked.toISOString())}</span>
+            {/* Counts from tablet width up; on phones the fixed footer stays one line. Changes always show. */}
+            <span className="hidden sm:inline">
+              {" · "}
+              {count("current")} up to date
+            </span>
+            {amended > 0 && (
+              <>
+                {" · "}
+                <span className="font-medium text-warn">{amended} changed since last review</span>
+              </>
+            )}
+            <span className="hidden sm:inline">
+              {" · "}
+              {count("manual")} reviewed by hand ({total} sources)
+            </span>
           </>
         ) : (
-          <>Legal sources: not checked yet.</>
+          <>Legal sources haven&apos;t been checked yet.</>
         )}
       </p>
       <CheckNowButton />

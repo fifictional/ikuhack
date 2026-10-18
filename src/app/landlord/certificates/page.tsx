@@ -4,7 +4,7 @@ import { ComplianceList } from "@/components/compliance/ComplianceList";
 import { getComplianceDuties } from "@/lib/compliance/service";
 import { DEMO } from "@/lib/demo";
 
-export const metadata = { title: "Certificates & safety checks — Docket" };
+export const metadata = { title: "Certificates & safety checks" };
 
 /**
  * The recurring, portfolio-level duties: what the landlord owes whether or not a repair is

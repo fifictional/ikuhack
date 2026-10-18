@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { InfoIcon } from "@/components/icons";
 import type { CaseState } from "@/lib/domain/types";
 import { PHASE_LABEL, fmtDateTime, fmtDay, plainDuty } from "@/lib/ui/labels";
 
@@ -35,6 +36,8 @@ export function BeliefTimeline({
   const [index, setIndex] = useState(stops.length - 1);
   const [state, setState] = useState<CaseState | null>(null);
   const [loading, setLoading] = useState(false);
+  // Only show an error after a load has actually failed (not before the first one starts).
+  const [failed, setFailed] = useState(false);
   const [shownAt, setShownAt] = useState<string | null>(null);
 
   // Clamp on render so a moved demo clock can't push the thumb out of range.
@@ -52,8 +55,13 @@ export function BeliefTimeline({
           if (cancelled) return;
           setState(j.state as CaseState);
           setShownAt(new Date(at).toISOString());
+          setFailed(false);
         })
-        .catch(() => !cancelled && setState(null))
+        .catch(() => {
+          if (cancelled) return;
+          setState(null);
+          setFailed(true);
+        })
         .finally(() => !cancelled && setLoading(false));
     }, 90);
     return () => {
@@ -88,7 +96,7 @@ export function BeliefTimeline({
         </span>
       </div>
 
-      {loading && !state && <p className="text-sm text-muted">Re-projecting…</p>}
+      {!state && !failed && <p className="text-sm text-muted">Loading this moment…</p>}
 
       {state && (
         <div key={shownAt ?? "first"} className="bt-fade space-y-2">
@@ -117,14 +125,17 @@ export function BeliefTimeline({
           {state.notes.length > 0 && (
             <ul className="space-y-1 text-xs text-muted">
               {state.notes.slice(0, 3).map((n) => (
-                <li key={n}>ℹ️ {n}</li>
+                <li key={n}>
+                  <InfoIcon className="me-1.5 align-[-3px] text-muted" />
+                  {n}
+                </li>
               ))}
             </ul>
           )}
         </div>
       )}
 
-      {!loading && !state && <p className="text-sm text-danger">Couldn&apos;t re-project this case.</p>}
+      {!loading && !state && failed && <p className="text-sm text-danger">Couldn&apos;t load this moment. Try again shortly.</p>}
 
       <style>{`
         @keyframes bt-fade-in {

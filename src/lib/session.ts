@@ -10,7 +10,7 @@ import { redirect } from "next/navigation";
 export type Role = "tenant" | "landlord";
 
 const COOKIE = "docket-role";
-/** 8 hours — a hackathon demo day, after which the persona expires and you land back on /login. */
+/** Sessions last 8 hours, then you're asked to sign in again. */
 const MAX_AGE = 60 * 60 * 8;
 
 /**

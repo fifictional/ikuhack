@@ -28,7 +28,8 @@ export function ObligationList({
       {obligations.map((o) => (
         <ObligationRow key={o.id} o={o} now={now} role={role} landlordName={landlordName} onWhy={() => setSelected(o)} />
       ))}
-      <LawGraphPanel obligation={selected} onClose={() => setSelected(null)} />
+      {/* Keyed by duty id so opening a different one remounts the panel and resets its selection. */}
+      <LawGraphPanel key={selected?.id ?? "none"} obligation={selected} onClose={() => setSelected(null)} />
     </>
   );
 }

@@ -3,10 +3,23 @@ import { notFound } from "next/navigation";
 import { getCase, recompute } from "@/lib/cases/service";
 import { getCachedChecks, getCaptureMethods } from "@/lib/evidence/authenticity";
 import type { Category, Obligation, Severity } from "@/lib/domain/types";
-import { CATEGORY_LABEL, FACT_PLAIN, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, factValuePlain, fmtDateTime, plainDuty, sourcePlain } from "@/lib/ui/labels";
+import {
+  CATEGORY_LABEL,
+  FACT_PLAIN,
+  PHASE_LABEL,
+  SEVERITY_PLAIN,
+  describeEvent,
+  factValuePlain,
+  fmtDateTime,
+  fmtTime,
+  plainDuty,
+  sourcePlain,
+} from "@/lib/ui/labels";
+import { buildDutyTypes, describeRevision, groupByDay } from "@/lib/ui/revisions";
 import { Countdown } from "./Countdown";
 import { PhotoAuthenticity } from "./PhotoAuthenticity";
 import { LandlordActions } from "./LandlordActions";
+import { ListenButton } from "./ListenButton";
 import { BeliefTimeline } from "./BeliefTimeline";
 import { ObligationList } from "./ObligationList";
 import { TenantActions } from "./TenantActions";
@@ -27,135 +40,225 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
   const done = s.obligations.filter((o) => o.status === "met" || o.status === "met_late");
   const evidence = c.events.filter((e) => e.type === "EVIDENCE_ADDED");
   const severity = s.facts["issue.severity"]?.value as Severity | undefined;
+  const vulnerable = s.facts["household.vulnerable"]?.value === true;
   const photoIds = evidence.flatMap((e) => (e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? [e.evidenceId] : []));
   // Landlord view: the verdict recorded at upload and how each photo was taken, loaded up front.
   const [checks, captures] = role === "landlord" ? await Promise.all([getCachedChecks(photoIds), getCaptureMethods(photoIds)]) : [{}, {}];
-  // The single most pressing duty, for the tenant's "what happens next" card.
+  // The single most pressing duty, for the tenant's alert.
   const next = [...open].sort((a, b) => Number(b.status === "breached") - Number(a.status === "breached") || a.dueAt.localeCompare(b.dueAt))[0];
+  const overdueCount = open.filter((o) => o.status === "breached").length;
+  const dutyTypes = buildDutyTypes(c.revisions);
+  const revisionGroups = groupByDay(c.revisions);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <div className="space-y-6">
-        <header className="space-y-1">
-          <p className="text-sm text-muted">{c.address} · {c.landlord_name}</p>
-          <h1 className="text-2xl font-semibold">{c.title}</h1>
-          <div className="flex flex-wrap gap-2 text-xs">
-            <Pill>{PHASE_LABEL[s.phase]}</Pill>
-            {category && <Pill>{CATEGORY_LABEL[category]}</Pill>}
-            {severity && <Pill tone={severity === "emergency" ? "danger" : undefined}>{SEVERITY_PLAIN[severity]}</Pill>}
-            {s.facts["household.vulnerable"]?.value === true && <Pill tone="warn">Vulnerable occupant</Pill>}
+    <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+      {/* Full-width header: the landlord's name appears here, and only here. */}
+      <header className="space-y-1 lg:col-span-2">
+        <p className="text-sm text-muted">
+          {c.address} · Landlord: {c.landlord_name}
+        </p>
+        <h1 className="text-2xl font-semibold">{c.title}</h1>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {/* Emergency first. */}
+          {severity && <Pill tone={severity === "emergency" ? "danger" : undefined}>{SEVERITY_PLAIN[severity]}</Pill>}
+          <Pill>{PHASE_LABEL[s.phase]}</Pill>
+          {category && <Pill>{CATEGORY_LABEL[category]}</Pill>}
+          {vulnerable && <Pill tone="warn">Vulnerable occupant</Pill>}
+        </div>
+      </header>
+
+      {/* Main column. `contents` on mobile lets its children take part in the page order. */}
+      <div className="contents lg:block lg:space-y-6">
+        {role === "tenant" && (
+          <div className="order-1">
+            <NextStep o={next} now={s.computedAt} caseId={caseId} />
           </div>
-        </header>
+        )}
 
-        {role === "tenant" && <NextStep o={next} landlordName={c.landlord_name} now={s.computedAt} />}
+        <div className="order-3">
+          <Section
+            title={role === "tenant" ? "Everything that's due" : "Who must do what, by when"}
+            right={overdueCount > 0 ? <span className="shrink-0 text-xs font-semibold text-danger">{overdueCount} overdue</span> : undefined}
+          >
+            {open.length === 0 && <p className="text-sm text-muted">Nothing is due right now.</p>}
+            <ObligationList obligations={open} now={s.computedAt} role={role} landlordName="Landlord" />
+            {done.length > 0 && (
+              <details className="text-sm">
+                <summary className="cursor-pointer py-2 text-muted">{done.length} done</summary>
+                <ObligationList obligations={done} now={s.computedAt} role={role} landlordName="Landlord" />
+              </details>
+            )}
+          </Section>
+        </div>
 
-        <Section title={role === "tenant" ? "Everything that's due" : "Who must do what, by when"}>
-          {open.length === 0 && <p className="text-sm text-muted">Nothing is due right now.</p>}
-          <ObligationList obligations={open} now={s.computedAt} role={role} landlordName={c.landlord_name} />
-          {done.length > 0 && (
-            <details className="text-sm">
-              <summary className="cursor-pointer py-2 text-muted">{done.length} done</summary>
-              <ObligationList obligations={done} now={s.computedAt} role={role} landlordName={c.landlord_name} />
-            </details>
-          )}
-        </Section>
+        <div className="order-4">
+          <Section
+            title={role === "tenant" ? "What changed and why" : "How Docket's view changed"}
+            right={<ListenButton caseId={caseId} text={c.revisions.map((r) => r.summary).join(" ")} label="🔊 Listen to all" />}
+          >
+            {c.revisions.length === 0 && <p className="text-sm text-muted">No changes yet.</p>}
+            <div className="space-y-4">
+              {revisionGroups.map((g) => (
+                <div key={g.day} className="space-y-2">
+                  <p className="text-xs font-semibold text-muted">{g.day}</p>
+                  <ul className="space-y-2">
+                    {g.items.map((r, i) => {
+                      const d = describeRevision(r, dutyTypes);
+                      return (
+                        <li key={`${r.at.toISOString()}-${i}`} className="flex gap-3">
+                          <span className="w-10 shrink-0 pt-0.5 font-mono text-[11px] text-muted">{fmtTime(r.at.toISOString())}</span>
+                          <span
+                            className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                              d.tone === "danger" ? "bg-danger" : "border border-muted bg-transparent"
+                            }`}
+                          />
+                          <div className="min-w-0">
+                            <p className={`text-sm font-semibold ${d.tone === "danger" ? "text-danger" : ""}`}>{d.title}</p>
+                            {d.description && <p className="truncate text-xs text-muted">{d.description}</p>}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </Section>
+        </div>
 
         {(s.conflicts.length > 0 || s.notes.length > 0) && (
-          <Section title="Things to know">
-            {s.conflicts.map((cf) => (
-              <p key={cf.key} className="text-sm">
-                ⚖️ Sources disagree on <b>{FACT_PLAIN[cf.key]}</b>:{" "}
-                {cf.candidates.map((b) => `${sourcePlain(b.source)} says "${factValuePlain(b.value)}"`).join(" vs ")}.{" "}
-                {cf.resolution === "safety_first" ? "Docket takes the safer view until this is resolved." : "Docket goes with the most reliable source."}
-              </p>
-            ))}
-            {s.notes.map((n) => <p key={n} className="text-sm">ℹ️ {n}</p>)}
-          </Section>
+          <div className="order-5">
+            <Section title="Things to know">
+              {s.conflicts.map((cf) => (
+                <p key={cf.key} className="text-sm">
+                  ⚖️ Sources disagree on <b>{FACT_PLAIN[cf.key]}</b>:{" "}
+                  {cf.candidates.map((b) => `${sourcePlain(b.source)} says "${factValuePlain(b.value)}"`).join(" vs ")}.{" "}
+                  {cf.resolution === "safety_first"
+                    ? "Docket takes the safer view until this is resolved."
+                    : "Docket goes with the most reliable source."}
+                </p>
+              ))}
+              {s.notes.map((n) => (
+                <p key={n} className="text-sm">
+                  ℹ️ {n}
+                </p>
+              ))}
+            </Section>
+          </div>
         )}
 
-        <Section title={role === "tenant" ? "What changed and why" : "How Docket's view changed"}>
-          {c.revisions.length === 0 && <p className="text-sm text-muted">No changes yet.</p>}
-          <ul className="space-y-2">
-            {c.revisions.map((r, i) => (
-              <li key={i} className="text-sm">
-                <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(r.at.toISOString())}</span>
-                <span className={r.kind === "obligation_breached" ? "text-danger" : r.kind === "obligation_abandoned" || r.kind === "obligation_reopened" ? "text-highlight-dark" : ""}>{r.summary}</span>
-              </li>
-            ))}
-          </ul>
-        </Section>
+        <div className="order-7">
+          <Section title="What Docket believed at the time">
+            <BeliefTimeline
+              caseId={caseId}
+              now={s.computedAt}
+              openedAt={s.openedAt}
+              revisions={c.revisions.map((r) => ({ at: r.at.toISOString() }))}
+              landlordName="Landlord"
+              breachedNow={overdueCount > 0}
+            />
+          </Section>
+        </div>
 
-        <Section title="What Docket believed at the time">
-          <BeliefTimeline
-            caseId={caseId}
-            now={s.computedAt}
-            openedAt={s.openedAt}
-            revisions={c.revisions.map((r) => ({ at: r.at.toISOString() }))}
-            landlordName={c.landlord_name}
-          />
-        </Section>
-
-        <Section title="Full record">
-          <details>
-          <summary className="cursor-pointer text-sm text-muted">{c.events.length} timestamped entries — tap to show</summary>
-          <ol className="mt-3 space-y-1 border-l border-border pl-4">
-            {c.events.map((e) => (
-              <li key={e.id} className="text-sm">
-                <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(e.at)}</span>
-                <span className="mr-2 text-xs uppercase text-muted">{e.actor}</span>
-                {describeEvent(e)}
-              </li>
-            ))}
-          </ol>
+        <div className="order-8">
+          <details className="group rounded-xl border border-border bg-surface">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Full record</h2>
+              <span className="text-xs text-muted">
+                {c.events.length} timestamped {c.events.length === 1 ? "entry" : "entries"} ·{" "}
+                <span className="group-open:hidden">Show ▾</span>
+                <span className="hidden group-open:inline">Hide ▴</span>
+              </span>
+            </summary>
+            <ol className="space-y-1 border-t border-border px-4 py-3">
+              {c.events.map((e) => (
+                <li key={e.id} className="text-sm">
+                  <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(e.at)}</span>
+                  <span className="mr-2 text-xs uppercase text-muted">{e.actor}</span>
+                  {describeEvent(e)}
+                </li>
+              ))}
+            </ol>
           </details>
-        </Section>
+        </div>
       </div>
 
-      <aside className="space-y-6">
-        {role === "landlord" ? (
-          <LandlordActions caseId={caseId} events={c.events} />
-        ) : (
-          <TenantActions caseId={caseId} escalationOptions={s.escalationOptions} phase={s.phase} vulnerable={s.facts["household.vulnerable"]?.value === true} />
-        )}
-        <Section title={`Evidence (${evidence.length})`}>
+      {/* Sidebar. `contents` on mobile lets its children fall into the page order. */}
+      <div className="contents lg:block lg:space-y-6">
+        <div className="order-2">
           {role === "landlord" ? (
-            <div className="space-y-2">
-              {evidence.map((e) => (e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? <PhotoAuthenticity key={e.id} evidenceId={e.evidenceId} caption={e.caption} initial={checks[e.evidenceId]} capture={captures[e.evidenceId]} /> : null))}
-            </div>
+            <LandlordActions caseId={caseId} events={c.events} />
           ) : (
-          <div className="grid grid-cols-3 gap-2">
-            {evidence.map((e) =>
-              e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={e.id} src={`/api/evidence/${e.evidenceId}`} alt={e.caption ?? "evidence"} className="aspect-square rounded object-cover" />
-              ) : null,
+            <TenantActions
+              caseId={caseId}
+              escalationOptions={s.escalationOptions}
+              phase={s.phase}
+              vulnerable={vulnerable}
+            />
+          )}
+        </div>
+
+        <div className="order-6">
+          <Section title={`Evidence (${evidence.length})`}>
+            {evidence.length === 0 && (
+              <p className="rounded-lg border border-border bg-background p-3 text-sm text-muted">
+                No photos yet. Adding some makes a complaint or claim much stronger.
+              </p>
             )}
-          </div>
-          )}
-          {evidence.some((e) => e.type === "EVIDENCE_ADDED" && e.kind !== "photo") && (
-            <ul className="space-y-1 text-sm">
-              {evidence.map((e) =>
-                e.type === "EVIDENCE_ADDED" && e.kind !== "photo" ? (
-                  <li key={e.id}>
-                    <a href={`/api/evidence/${e.evidenceId}`} target="_blank" className="font-medium text-primary underline">
-                      {e.caption ?? e.kind}
-                    </a>
-                  </li>
-                ) : null,
-              )}
-            </ul>
-          )}
-          <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-primary underline" target="_blank">
-            Download evidence bundle (PDF)
-          </a>
-        </Section>
-      </aside>
+            {role === "landlord" ? (
+              <div className="space-y-2">
+                {evidence.map((e) =>
+                  e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? (
+                    <PhotoAuthenticity
+                      key={e.id}
+                      evidenceId={e.evidenceId}
+                      caption={e.caption}
+                      initial={checks[e.evidenceId]}
+                      capture={captures[e.evidenceId]}
+                    />
+                  ) : null,
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {evidence.map((e) =>
+                  e.type === "EVIDENCE_ADDED" && e.kind === "photo" ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={e.id}
+                      src={`/api/evidence/${e.evidenceId}`}
+                      alt={e.caption ?? "evidence"}
+                      className="aspect-square rounded object-cover"
+                    />
+                  ) : null,
+                )}
+              </div>
+            )}
+            {evidence.some((e) => e.type === "EVIDENCE_ADDED" && e.kind !== "photo") && (
+              <ul className="space-y-1 text-sm">
+                {evidence.map((e) =>
+                  e.type === "EVIDENCE_ADDED" && e.kind !== "photo" ? (
+                    <li key={e.id}>
+                      <a href={`/api/evidence/${e.evidenceId}`} target="_blank" className="font-medium text-primary underline">
+                        {e.caption ?? e.kind}
+                      </a>
+                    </li>
+                  ) : null,
+                )}
+              </ul>
+            )}
+            <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-primary underline" target="_blank">
+              Download evidence bundle (PDF)
+            </a>
+          </Section>
+        </div>
+      </div>
     </div>
   );
 }
 
 /** Tenant-only headline: the one thing that matters most right now. */
-function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlordName: string; now: string }) {
+function NextStep({ o, now, caseId }: { o: Obligation | undefined; now: string; caseId: string }) {
   if (!o) {
     return (
       <div className="rounded-xl border border-border bg-surface p-4">
@@ -164,28 +267,61 @@ function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlor
       </div>
     );
   }
-  const breached = o.status === "breached";
+
+  const breached = o.status === "breached" && o.party === "landlord";
+  if (breached) {
+    return (
+      <div className="rounded-xl border-2 border-danger bg-surface p-4">
+        <p className="text-lg font-semibold">Your landlord should have fixed this by {fmtDateTime(o.dueAt)}</p>
+        <div className="mt-2 flex items-center gap-3">
+          <Countdown dueAt={o.dueAt} serverNow={now} />
+          <ListenButton
+            caseId={caseId}
+            text={`Your landlord should have fixed this by ${fmtDateTime(o.dueAt)}. You can now escalate this.`}
+          />
+        </div>
+        <div className="my-3 border-t border-border" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm">You can now escalate this.</p>
+          <a href="#escalate" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">
+            See your options →
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`rounded-xl border-2 p-4 ${breached ? "border-danger bg-surface" : "border-primary bg-primary-tint"}`}>
-      <p className="text-sm text-muted">{breached ? "Deadline missed" : "What happens next"}</p>
+    <div className="rounded-xl border-2 border-primary bg-primary-tint p-4">
+      <p className="text-sm text-muted">What happens next</p>
       <p className="text-lg font-semibold">
-        {plainDuty(o, landlordName)} {breached ? "— this was due" : "by"} {fmtDateTime(o.dueAt)}
+        {plainDuty(o, "Landlord")} by {fmtDateTime(o.dueAt)}
       </p>
       <div className="mt-1 flex items-center gap-2">
         <Countdown dueAt={o.dueAt} serverNow={now} />
-        <span className="text-xs text-muted">· {o.legalBasis.deadline === "law" ? "legal deadline" : o.legalBasis.statutory ? "legal duty, Docket target time" : "Docket target"}</span>
+        <span className="text-xs text-muted">
+          · {o.legalBasis.deadline === "law" ? "legal deadline" : o.legalBasis.statutory ? "legal duty, Docket target time" : "Docket target"}
+        </span>
       </div>
-      {breached && o.party === "landlord" && (
-        <p className="mt-2 text-sm">You can escalate this — see the options under <b>Your actions</b>.</p>
-      )}
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  right,
+  children,
+}: {
+  title: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section className="space-y-3 rounded-xl border border-border bg-surface p-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">{title}</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">{title}</h2>
+        {right}
+      </div>
       {children}
     </section>
   );
@@ -193,9 +329,5 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Pill({ children, tone }: { children: React.ReactNode; tone?: "warn" | "danger" }) {
   const cls = tone === "danger" ? "border-danger text-danger" : tone === "warn" ? "border-warn text-warn" : "border-border text-muted";
-  return (
-    <span className={`rounded-full border px-2 py-0.5 ${cls}`}>
-      {children}
-    </span>
-  );
+  return <span className={`rounded-full border px-2 py-0.5 ${cls}`}>{children}</span>;
 }

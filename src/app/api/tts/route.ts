@@ -9,12 +9,13 @@ import { MAX_TTS_CHARS, speak } from "@/lib/voice/elevenlabs";
  * Gemini translates (cached), then ElevenLabs speaks it (cached, via guardVoice inside speak()).
  */
 export const POST = handle(async (req: Request) => {
-  const { caseId, text } = z
-    .object({ caseId: z.uuid().optional(), text: z.string().min(1).max(MAX_TTS_CHARS) })
+  const { caseId, text, lang: pageLang } = z
+    .object({ caseId: z.uuid().optional(), text: z.string().min(1).max(MAX_TTS_CHARS), lang: z.string().max(10).optional() })
     .parse(await req.json());
 
-  let lang: string | null = null;
-  if (caseId) {
+  // The language the tenant is viewing the site in wins; otherwise their saved preference.
+  let lang: string | null = pageLang ?? null;
+  if (!lang && caseId) {
     const [row] = await db()<{ preferred_language: string | null }[]>`
       SELECT t.preferred_language FROM cases c JOIN properties p ON p.id = c.property_id
       LEFT JOIN parties t ON t.id = p.tenant_id WHERE c.id = ${caseId}`;

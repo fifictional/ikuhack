@@ -2,22 +2,24 @@
 
 import { useState } from "react";
 import { captureMethodOf } from "@/lib/evidence/live";
+import { useT } from "@/components/i18n/I18n";
 
 /** Thumbnails of the photos about to be submitted, with a remove button and a "live" tag on camera shots. */
 export function PhotoThumbs({ photos, onRemove }: { photos: File[]; onRemove: (index: number) => void }) {
+  const t = useT();
   return (
     <ul className="grid grid-cols-3 gap-2">
       {photos.map((p, i) => (
         <li key={`${p.name}-${p.size}-${i}`} className="relative aspect-square overflow-hidden rounded-lg border border-border bg-surface">
           <Thumb file={p} alt={`Photo ${i + 1}`} />
           {captureMethodOf(p) === "live" && (
-            <span className="absolute bottom-1 left-1 rounded-full bg-ink/80 px-2 py-0.5 text-[10px] font-medium text-white">Taken live</span>
+            <span className="absolute bottom-1 start-1 rounded-full bg-ink/80 px-2 py-0.5 text-[10px] font-medium text-white">{t("report.takenLive")}</span>
           )}
           <button
             type="button"
             onClick={() => onRemove(i)}
-            aria-label={`Remove photo ${i + 1}`}
-            className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-xs text-white hover:bg-ink"
+            aria-label={t("report.removePhoto", { n: i + 1 })}
+            className="absolute end-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-ink/80 text-xs text-white hover:bg-ink"
           >
             ✕
           </button>

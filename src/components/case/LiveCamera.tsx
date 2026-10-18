@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LIVE_PREFIX } from "@/lib/evidence/live";
+import { useT } from "@/components/i18n/I18n";
 
 /**
  * Take a photo inside Docket instead of picking a file. The picture comes straight from the camera stream, so the
  * landlord can see it wasn't imported from a gallery or an editing app. (The browser reports this; it's a label, not proof.)
  * Flow: viewfinder → shutter flash → preview with Retake / Use photo.
  */
-export function LiveCamera({ onCapture, label = "Take a photo" }: { onCapture: (file: File) => void; label?: string }) {
+export function LiveCamera({ onCapture, label }: { onCapture: (file: File) => void; label?: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
@@ -31,7 +33,7 @@ export function LiveCamera({ onCapture, label = "Take a photo" }: { onCapture: (
         stream.current = s;
         if (video.current) video.current.srcObject = s;
       })
-      .catch(() => setError("Couldn't open the camera. Allow camera access, or choose a photo instead."));
+      .catch(() => setError("camera"));
     return () => {
       cancelled = true;
       stop();
@@ -80,28 +82,28 @@ export function LiveCamera({ onCapture, label = "Take a photo" }: { onCapture: (
         onClick={() => { setError(null); setOpen(true); }}
         className="cursor-pointer rounded-lg border border-border bg-surface px-3 py-2 text-sm hover:border-primary"
       >
-        📷 {label}
+        📷 {label ?? t("camera.take")}
       </button>
       {open && (
-        <div role="dialog" aria-modal="true" aria-label="Camera" className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ink/90 p-4">
+        <div role="dialog" aria-modal="true" aria-label={t("camera.title")} className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-ink/90 p-4">
           {error ? (
-            <p role="alert" className="max-w-sm rounded-lg bg-surface p-4 text-sm">{error}</p>
+            <p role="alert" className="max-w-sm rounded-lg bg-surface p-4 text-sm">{t("camera.error")}</p>
           ) : (
             <div className="relative w-full max-w-md overflow-hidden rounded-lg bg-ink">
               {/* The stream keeps running behind the preview so Retake is instant. */}
               <video ref={video} autoPlay playsInline muted className={`max-h-[70vh] w-full ${shot ? "invisible" : ""}`} />
               {shot && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={shot.url} alt="Photo you just took" className="absolute inset-0 h-full w-full object-contain" />
+                <img src={shot.url} alt={t("camera.justTook")} className="absolute inset-0 h-full w-full object-contain" />
               )}
               <div aria-hidden className={`pointer-events-none absolute inset-0 bg-surface transition-opacity ${flash ? "opacity-90 duration-75" : "opacity-0 duration-300"}`} />
             </div>
           )}
           <div className="flex gap-3">
-            {!error && !shot && <button type="button" onClick={snap} className="rounded-lg bg-primary px-5 py-3 font-semibold text-white ring-2 ring-white hover:bg-primary-dark">Take photo</button>}
-            {shot && <button type="button" onClick={() => setShot(null)} className="rounded-lg border border-border bg-surface px-5 py-3 text-sm">Retake</button>}
-            {shot && <button type="button" onClick={use} className="rounded-lg bg-primary px-5 py-3 font-semibold text-white ring-2 ring-white hover:bg-primary-dark">Use photo</button>}
-            <button type="button" onClick={close} className="rounded-lg border border-border bg-surface px-5 py-3 text-sm">Cancel</button>
+            {!error && !shot && <button type="button" onClick={snap} className="rounded-lg bg-primary px-5 py-3 font-semibold text-white ring-2 ring-white hover:bg-primary-dark">{t("camera.take")}</button>}
+            {shot && <button type="button" onClick={() => setShot(null)} className="rounded-lg border border-border bg-surface px-5 py-3 text-sm">{t("camera.retake")}</button>}
+            {shot && <button type="button" onClick={use} className="rounded-lg bg-primary px-5 py-3 font-semibold text-white ring-2 ring-white hover:bg-primary-dark">{t("camera.use")}</button>}
+            <button type="button" onClick={close} className="rounded-lg border border-border bg-surface px-5 py-3 text-sm">{t("common.cancel")}</button>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/components/i18n/I18n";
 
 /** Matches MAX_VOICE_NOTE_BYTES on the server (~2 min); stop early so the upload isn't rejected. */
 const MAX_NOTE_MS = 110_000;
@@ -13,6 +14,7 @@ type State = "idle" | "recording" | "paused" | "transcribing" | "review";
  * Cheaper than a live agent call, and works for tenants who'd rather not talk to a bot.
  */
 export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) {
+  const t = useT();
   const [state, setState] = useState<State>("idle");
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +50,11 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
         const body = await res.json();
         if (!res.ok) {
           setState("idle");
-          return setError(body.error ?? "Couldn't transcribe that — please type instead.");
+          return setError(body.error ?? t("voiceNote.errTranscribe"));
         }
         if (!body.text?.trim()) {
           setState("idle");
-          return setError("We didn't catch anything — try again a little closer to the microphone.");
+          return setError(t("voiceNote.errEmpty"));
         }
         setDraft(body.text.trim());
         setState("review");
@@ -64,7 +66,7 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
       recorder.current = rec;
       setState("recording");
     } catch {
-      setError("Microphone not available — please type instead.");
+      setError(t("voiceNote.errMic"));
     }
   }
 
@@ -87,7 +89,7 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
     return (
       <div className="space-y-2 rounded-lg border border-primary bg-primary-tint p-3">
         <label className="block text-sm font-medium text-ink" htmlFor="voice-note-draft">
-          Here&apos;s what we heard. Fix anything that&apos;s wrong:
+          {t("voiceNote.heard")}
         </label>
         <textarea
           id="voice-note-draft"
@@ -97,7 +99,7 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
           className="w-full rounded-lg border border-border bg-surface p-2 text-sm"
         />
         <div className="flex gap-2">
-          <button onClick={() => setState("idle")} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">Discard</button>
+          <button onClick={() => setState("idle")} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm">{t("voiceNote.discard")}</button>
           <button
             onClick={() => {
               if (draft.trim()) onText(draft.trim());
@@ -105,7 +107,7 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
             }}
             className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary-dark"
           >
-            Add to my report
+            {t("voiceNote.add")}
           </button>
         </div>
       </div>
@@ -117,16 +119,16 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
       <div className="flex items-center gap-2 rounded-lg border border-highlight bg-highlight-tint px-3 py-2 text-sm">
         <span aria-hidden className={`h-2.5 w-2.5 rounded-full bg-highlight ${state === "recording" ? "animate-pulse" : "opacity-40"}`} />
         <span className="font-mono text-highlight-dark" aria-live="polite">
-          {state === "paused" ? `Paused ${clock}` : `Recording ${clock}`}
+          {t(state === "paused" ? "voiceNote.paused" : "voiceNote.recording", { clock })}
         </span>
         <button
           onClick={state === "recording" ? pause : resume}
-          className="ml-auto rounded-md border border-primary bg-surface px-3 py-1 font-medium text-primary hover:bg-primary-tint"
+          className="ms-auto rounded-md border border-primary bg-surface px-3 py-1 font-medium text-primary hover:bg-primary-tint"
         >
-          {state === "recording" ? "Pause" : "Resume"}
+          {state === "recording" ? t("common.pause") : t("common.resume")}
         </button>
         <button onClick={() => recorder.current?.stop()} className="rounded-md bg-primary px-3 py-1 font-semibold text-white hover:bg-primary-dark">
-          Done
+          {t("voiceNote.done")}
         </button>
       </div>
     );
@@ -141,7 +143,7 @@ export function VoiceNoteButton({ onText }: { onText: (text: string) => void }) 
         className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-3 text-sm font-medium text-primary hover:border-primary hover:bg-primary-tint disabled:opacity-60"
       >
         <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-primary" />
-        {state === "transcribing" ? "Writing it down…" : "Record a voice note instead"}
+        {state === "transcribing" ? t("voiceNote.transcribing") : t("voiceNote.record")}
       </button>
       {error && <p className="text-sm text-danger">{error}</p>}
     </div>

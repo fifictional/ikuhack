@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { Obligation } from "@/lib/domain/types";
-import { deadlineLabel, fmtDateTime, plainDuty } from "@/lib/ui/labels";
+import { deadlineLabelIn, formatDateTime, plainDutyIn } from "@/lib/i18n";
+import { useLocale, useT } from "@/components/i18n/I18n";
 import { Countdown } from "./Countdown";
 import { LawGraphPanel } from "@/components/law/LawGraphPanel";
 
@@ -45,25 +46,28 @@ function ObligationRow({
   landlordName: string;
   onWhy: () => void;
 }) {
-  const kind = deadlineLabel(o);
+  // Inside the landlord section the scope is English, so this stays English there.
+  const locale = useLocale();
+  const t = useT();
+  const kind = deadlineLabelIn(locale, o);
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-0">
       <div className="min-w-0">
         <p className="text-sm font-medium">
           {role === "tenant" ? (
-            plainDuty(o, landlordName)
+            plainDutyIn(locale, o, landlordName)
           ) : (
             <>
               <span className="mr-2 text-xs uppercase text-muted">{o.party}</span>
               {o.title}
             </>
           )}
-          {o.provisional && <span className="ml-2 text-xs text-warn">{role === "tenant" ? "being checked" : "provisional"}</span>}
+          {o.provisional && <span className="ms-2 text-xs text-warn">{role === "tenant" ? t("obligation.beingChecked") : "provisional"}</span>}
         </p>
         <p className="text-xs text-muted">
           {kind} ·{" "}
           <button type="button" onClick={onWhy} className="font-medium text-primary underline underline-offset-2 hover:text-primary-dark">
-            why?
+            {t("obligation.why")}
           </button>
           {o.legalBasis.url && (
             <>
@@ -74,15 +78,15 @@ function ObligationRow({
             </>
           )}
         </p>
-        {o.pausedMs > 0 && <p className="text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>}
+        {o.pausedMs > 0 && <p className="text-xs text-muted">{t("obligation.clockPaused", { h: Math.round(o.pausedMs / 3_600_000) })}</p>}
       </div>
-      <div className="shrink-0 text-right">
+      <div className="shrink-0 text-end">
         {o.status === "open" || o.status === "breached" ? (
           <Countdown dueAt={o.dueAt} serverNow={now} />
         ) : (
-          <span className="text-sm text-ok">{o.status === "met" ? "Done on time" : "Done late"}</span>
+          <span className="text-sm text-ok">{t(o.status === "met" ? "obligation.doneOnTime" : "obligation.doneLate")}</span>
         )}
-        <p className="text-xs text-muted">{fmtDateTime(o.dueAt)}</p>
+        <p className="text-xs text-muted">{formatDateTime(o.dueAt, locale)}</p>
       </div>
     </div>
   );

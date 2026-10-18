@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { LocaleScope, T } from "@/components/i18n/I18n";
+import { getLocale } from "@/lib/i18n/server";
 import { getRole } from "@/lib/session";
 import { signOut } from "@/app/login/actions";
 
-const LABEL = { tenant: "Tenant", landlord: "Landlord" } as const;
+const LABEL = { tenant: "nav.tenant", landlord: "nav.landlord" } as const;
 
 /**
  * Link to the section you're signed in as. Renders nothing otherwise, so the header never
@@ -13,9 +15,11 @@ export async function RoleNavLink() {
   if (!role) return null;
 
   return (
-    <Link href={`/${role}`} className="font-medium text-ink/80 hover:text-primary">
-      {LABEL[role]}
-    </Link>
+    <LocaleScope locale={role === "landlord" ? "en" : await getLocale()}>
+      <Link href={`/${role}`} className="font-medium text-ink/80 hover:text-primary">
+        <T k={LABEL[role]} />
+      </Link>
+    </LocaleScope>
   );
 }
 
@@ -25,20 +29,27 @@ export async function RoleNavLink() {
  */
 export async function SessionNav() {
   const role = await getRole();
+  // These stream in after hydration, so they must render in the same language on server and client.
+  // Landlords stay in English.
+  const locale = role === "landlord" ? "en" : await getLocale();
 
   if (!role) {
     return (
-      <Link href="/login" className="font-medium text-ink/80 hover:text-primary">
-        Sign in
-      </Link>
+      <LocaleScope locale={locale}>
+        <Link href="/login" className="font-medium text-ink/80 hover:text-primary">
+          <T k="nav.signIn" />
+        </Link>
+      </LocaleScope>
     );
   }
 
   return (
-    <form action={signOut}>
-      <button type="submit" className="font-medium text-ink/80 hover:text-primary">
-        Sign out
-      </button>
-    </form>
+    <LocaleScope locale={locale}>
+      <form action={signOut}>
+        <button type="submit" className="font-medium text-ink/80 hover:text-primary">
+          <T k="nav.signOut" />
+        </button>
+      </form>
+    </LocaleScope>
   );
 }

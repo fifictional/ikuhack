@@ -54,6 +54,10 @@ Keep the repo outside iCloud-synced folders (Desktop, Documents); it lives at `~
 
 All UI must follow the **greyscale** brand system in `.claude/skills/docket-brand/SKILL.md`: greys, white and near-black via the tokens in `src/app/globals.css` (`primary`, `highlight`, `panel`, `ink`…), never raw hex or Tailwind's default palette. Colour is only for deadline status (amber/red/green). The logo (`src/components/brand/Logo.tsx`) keeps its D-with-house shape in greyscale. Load that skill before any UI change.
 
+## Languages
+
+Tenant screens are translated into 8 languages (see `docs/LANGUAGES.md`): new tenant-facing text goes in `src/lib/i18n/messages/en.ts` plus every other language file (the typecheck enforces it). Landlord/demo screens, legal citations, the case record, letters and the PDF stay English. Use start/end classes (`ms-*`, `text-end`) for right-to-left support.
+
 ## Conventions
 
 - TypeScript strict, zod at every boundary (API input, LLM output).

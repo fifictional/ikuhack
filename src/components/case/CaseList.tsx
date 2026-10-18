@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CaseState, Category } from "@/lib/domain/types";
-import { CATEGORY_LABEL, PHASE_LABEL, fmtDateTime } from "@/lib/ui/labels";
+import { type Locale, type MessageKey, dutyActionIn, formatDateTime, translator } from "@/lib/i18n";
 import { Countdown } from "./Countdown";
 
 interface Row {
@@ -11,7 +11,9 @@ interface Row {
 }
 
 /** Case list sorted by most urgent open duty; breaches first. */
-export function CaseList({ cases, hrefBase, party, now }: { cases: Row[]; hrefBase: string; party: "tenant" | "landlord"; now: string }) {
+/** `locale` translates the tenant's list; the landlord's list stays English. */
+export function CaseList({ cases, hrefBase, party, now, locale = "en" }: { cases: Row[]; hrefBase: string; party: "tenant" | "landlord"; now: string; locale?: Locale }) {
+  const t = translator(locale);
   const withNext = cases.map((c) => {
     const next = c.state?.obligations
       .filter((o) => o.party === "landlord" && (o.status === "open" || o.status === "breached"))
@@ -20,7 +22,7 @@ export function CaseList({ cases, hrefBase, party, now }: { cases: Row[]; hrefBa
   });
   withNext.sort((a, b) => (a.next?.dueAt ?? "9").localeCompare(b.next?.dueAt ?? "9"));
 
-  if (cases.length === 0) return <p className="text-sm text-muted">No repairs yet.</p>;
+  if (cases.length === 0) return <p className="text-sm text-muted">{t("tenantHome.empty")}</p>;
   return (
     <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
       {withNext.map((c) => {
@@ -32,13 +34,13 @@ export function CaseList({ cases, hrefBase, party, now }: { cases: Row[]; hrefBa
                 <p className="font-medium">{c.title}</p>
                 <p className="text-xs text-muted">
                   {party === "landlord" && `${c.address} · `}
-                  {category ? CATEGORY_LABEL[category] : "Uncategorised"} · {c.state ? PHASE_LABEL[c.state.phase] : "—"}
+                  {category ? t(`category.${category}` as MessageKey) : t("tenantHome.uncategorised")} · {c.state ? t(`phase.${c.state.phase}` as MessageKey) : "—"}
                 </p>
               </div>
               {c.next && c.state && (
-                <div className="text-right">
+                <div className="text-end">
                   <Countdown dueAt={c.next.dueAt} serverNow={now} />
-                  <p className="text-xs text-muted">{c.next.title} · {fmtDateTime(c.next.dueAt)}</p>
+                  <p className="text-xs text-muted">{party === "tenant" ? dutyActionIn(locale, c.next) : c.next.title} · {formatDateTime(c.next.dueAt, locale)}</p>
                 </div>
               )}
             </Link>

@@ -6,7 +6,6 @@ import type { Category, Obligation, Severity } from "@/lib/domain/types";
 import { CATEGORY_LABEL, FACT_PLAIN, PHASE_LABEL, SEVERITY_PLAIN, describeEvent, factValuePlain, fmtDateTime, plainDuty, sourcePlain } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
 import { PhotoAuthenticity } from "./PhotoAuthenticity";
-import { ListenButton } from "./ListenButton";
 import { LandlordActions } from "./LandlordActions";
 import { BeliefTimeline } from "./BeliefTimeline";
 import { ObligationList } from "./ObligationList";
@@ -48,7 +47,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
           </div>
         </header>
 
-        {role === "tenant" && <NextStep o={next} landlordName={c.landlord_name} now={s.computedAt} caseId={caseId} />}
+        {role === "tenant" && <NextStep o={next} landlordName={c.landlord_name} now={s.computedAt} />}
 
         <Section title={role === "tenant" ? "Everything that's due" : "Who must do what, by when"}>
           {open.length === 0 && <p className="text-sm text-muted">Nothing is due right now.</p>}
@@ -81,7 +80,6 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               <li key={i} className="text-sm">
                 <span className="mr-2 font-mono text-xs text-muted">{fmtDateTime(r.at.toISOString())}</span>
                 <span className={r.kind === "obligation_breached" ? "text-danger" : r.kind === "obligation_abandoned" || r.kind === "obligation_reopened" ? "text-highlight-dark" : ""}>{r.summary}</span>
-                {role === "tenant" && i < 3 && <span className="ml-2 align-middle"><ListenButton caseId={caseId} text={r.summary.slice(0, 600)} /></span>}
               </li>
             ))}
           </ul>
@@ -157,7 +155,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
 }
 
 /** Tenant-only headline: the one thing that matters most right now. */
-function NextStep({ o, landlordName, now, caseId }: { o: Obligation | undefined; landlordName: string; now: string; caseId: string }) {
+function NextStep({ o, landlordName, now }: { o: Obligation | undefined; landlordName: string; now: string }) {
   if (!o) {
     return (
       <div className="rounded-xl border border-border bg-surface p-4">
@@ -176,9 +174,6 @@ function NextStep({ o, landlordName, now, caseId }: { o: Obligation | undefined;
       <div className="mt-1 flex items-center gap-2">
         <Countdown dueAt={o.dueAt} serverNow={now} />
         <span className="text-xs text-muted">· {o.legalBasis.deadline === "law" ? "legal deadline" : o.legalBasis.statutory ? "legal duty, Docket target time" : "Docket target"}</span>
-      </div>
-      <div className="mt-2">
-        <ListenButton caseId={caseId} text={`${plainDuty(o, landlordName)} ${breached ? "was due" : "by"} ${fmtDateTime(o.dueAt)}.`} />
       </div>
       {breached && o.party === "landlord" && (
         <p className="mt-2 text-sm">You can escalate this — see the options under <b>Your actions</b>.</p>

@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { ProofFlow } from "@/components/proof/ProofFlow";
 import { latestOnChain, proofTotals, recentBatches, type BatchSummary } from "@/lib/solana/proof";
-import { fmtDateTime } from "@/lib/ui/labels";
+import { fmtDateTime, fmtDay } from "@/lib/ui/labels";
 
 export const metadata = { title: "Proof on Solana" };
 
@@ -24,13 +24,15 @@ export default function ProofPage() {
   );
 }
 
-const KIND_LABEL: Record<string, string> = {
-  evidence: "evidence",
-  case_head: "case logs",
-  compliance_record: "inspections",
-  compliance_copy: "tenant copies",
-  compliance_certificate: "certificates",
+/** [singular, plural] so counts read correctly ("1 inspection", "4 inspections"). */
+const KIND_LABEL: Record<string, [string, string]> = {
+  evidence: ["evidence file", "evidence files"],
+  case_head: ["case log", "case logs"],
+  compliance_record: ["inspection", "inspections"],
+  compliance_copy: ["tenant copy", "tenant copies"],
+  compliance_certificate: ["certificate", "certificates"],
 };
+const kindCount = (k: string, n: number) => `${n} ${KIND_LABEL[k]?.[n === 1 ? 0 : 1] ?? k}`;
 
 async function Proof() {
   await connection();
@@ -45,7 +47,7 @@ async function Proof() {
   if (!latest) {
     return (
       <p className="rounded-xl border border-border bg-surface p-4 text-sm text-muted">
-        Nothing anchored yet. Use &ldquo;Anchor now&rdquo; on the landlord dashboard, or wait for the daily run.
+        No records have been anchored yet. Records are anchored automatically every day.
       </p>
     );
   }
@@ -56,7 +58,7 @@ async function Proof() {
         <Tile label="Batches on-chain" value={totals.batches} />
         <Tile label="Fingerprints anchored" value={totals.leaves} />
         <Tile label="Compliance records" value={complianceTotal} />
-        <Tile label="Network" value={latest.cluster} />
+        <Tile label="Last anchored" value={fmtDay(latest.createdAt.toISOString())} />
       </div>
 
       <section className="space-y-3 rounded-xl border-2 border-primary bg-primary-tint p-4">
@@ -100,7 +102,7 @@ async function Proof() {
           <p className="break-all font-mono text-xs text-muted">{b.root}</p>
           <p className="text-xs text-muted">
             {fmtDateTime(b.createdAt.toISOString())} ·{" "}
-            {Object.entries(b.byKind).map(([k, n]) => `${n} ${KIND_LABEL[k] ?? k}`).join(" · ")}
+            {Object.entries(b.byKind).map(([k, n]) => kindCount(k, n)).join(" · ")}
           </p>
         </div>
         {b.url && <a href={b.url} target="_blank" rel="noreferrer" className="shrink-0 text-xs font-medium text-primary underline">Explorer ↗</a>}

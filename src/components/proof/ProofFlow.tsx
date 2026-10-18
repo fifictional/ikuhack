@@ -32,7 +32,7 @@ export function ProofFlow({ batch, verified }: { batch: BatchSummary; verified: 
         </marker>
       </defs>
       <rect x="466" y="70" width="166" height="80" rx="10" className="fill-primary stroke-primary" />
-      <text x="549" y="97" textAnchor="middle" className="fill-white text-[13px] font-semibold">Solana {batch.cluster}</text>
+      <text x="549" y="97" textAnchor="middle" className="fill-white text-[13px] font-semibold">Solana</text>
       <text x="549" y="116" textAnchor="middle" className="fill-white font-mono text-[11px]">memo in a public tx</text>
       <text x="549" y="136" textAnchor="middle" className="fill-white text-[12px] font-semibold">
         {verified === null ? "" : verified ? "✓ matches the chain" : "✗ does not match"}

@@ -21,14 +21,14 @@ export const es: Messages = {
   "home.landlordBody": "Plazos legales en tiempo real para todas tus viviendas, con un historial que demuestra el cumplimiento.",
 
   "login.title": "Inicia sesión en docket",
-  "login.demoNote": "Versión de hackathon: sirve cualquier correo y cualquier contraseña. No hay cuentas reales.",
+  "login.intro": "Inicia sesión para ver tus reparaciones, plazos y pruebas.",
   "login.error": "Introduce un correo y una contraseña.",
   "login.iAmA": "Soy",
   "login.tenant": "Inquilino",
   "login.landlord": "Propietario",
   "login.email": "Correo electrónico",
   "login.password": "Contraseña",
-  "login.passwordPlaceholder": "cualquiera",
+  "login.passwordPlaceholder": "Tu contraseña",
   "login.submit": "Iniciar sesión",
   "common.loading": "Cargando…",
 
@@ -198,12 +198,12 @@ export const es: Messages = {
   "escalation.council_environmental_health": "Denunciar al ayuntamiento (environmental health)",
   "escalation.pre_action_letter": "Carta de reclamación (pre-action protocol)",
 
-  "listen.listen": "🔊 Escuchar",
+  "listen.listen": "Escuchar",
   "listen.stop": "■ Parar",
   "listen.error": "No se pudo reproducir",
 
   // Added for the re-laid-out case page
-  "case.landlord": "El propietario",
+  "case.landlord": "Tu propietario",
   "case.landlordLabel": "Propietario: {name}",
   "case.overdueCount": "Atrasadas: {n}",
   "case.noChanges": "Todavía no hay cambios.",
@@ -213,7 +213,7 @@ export const es: Messages = {
   "case.shouldHaveFixed": "Tu propietario debería haberlo arreglado antes del {date}",
   "case.canEscalateNow": "Ya puedes escalar el caso.",
   "case.seeOptions": "Ver tus opciones →",
-  "listen.all": "🔊 Escuchar todo",
+  "listen.all": "Escuchar todo",
   "dutyType.target": "Plazo de Docket",
   "dutyType.lawAwaab": "Plazo legal · Awaab's Law",
   "dutyType.reasonable": "Obligación legal · plazo razonable",

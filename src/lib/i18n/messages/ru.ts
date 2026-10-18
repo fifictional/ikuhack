@@ -21,14 +21,14 @@ export const ru: Messages = {
   "home.landlordBody": "Законные сроки по всем объектам в реальном времени и история, подтверждающая соблюдение закона.",
 
   "login.title": "Вход в docket",
-  "login.demoNote": "Версия для хакатона: подойдут любой e-mail и любой пароль. Настоящих аккаунтов нет.",
+  "login.intro": "Войдите, чтобы видеть свои ремонты, сроки и доказательства.",
   "login.error": "Введите e-mail и пароль.",
   "login.iAmA": "Я",
   "login.tenant": "Арендатор",
   "login.landlord": "Арендодатель",
   "login.email": "E-mail",
   "login.password": "Пароль",
-  "login.passwordPlaceholder": "любой",
+  "login.passwordPlaceholder": "Ваш пароль",
   "login.submit": "Войти",
   "common.loading": "Загрузка…",
 
@@ -198,12 +198,12 @@ export const ru: Messages = {
   "escalation.council_environmental_health": "Сообщить в местный совет (environmental health)",
   "escalation.pre_action_letter": "Досудебная претензия (pre-action protocol)",
 
-  "listen.listen": "🔊 Слушать",
+  "listen.listen": "Слушать",
   "listen.stop": "■ Стоп",
   "listen.error": "Не удалось воспроизвести",
 
   // Added for the re-laid-out case page
-  "case.landlord": "Арендодатель",
+  "case.landlord": "Ваш арендодатель",
   "case.landlordLabel": "Арендодатель: {name}",
   "case.overdueCount": "Просрочено: {n}",
   "case.noChanges": "Пока изменений нет.",
@@ -213,7 +213,7 @@ export const ru: Messages = {
   "case.shouldHaveFixed": "Арендодатель должен был устранить это до {date}",
   "case.canEscalateNow": "Теперь вы можете это обжаловать.",
   "case.seeOptions": "Посмотреть варианты →",
-  "listen.all": "🔊 Слушать всё",
+  "listen.all": "Слушать всё",
   "dutyType.target": "Срок Docket",
   "dutyType.lawAwaab": "Законный срок · Awaab's Law",
   "dutyType.reasonable": "Обязанность по закону · разумный срок",

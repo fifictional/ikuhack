@@ -21,14 +21,14 @@ export const ar: Messages = {
   "home.landlordBody": "مواعيد قانونية مباشرة لجميع عقاراتك، مع سجل يثبت الالتزام.",
 
   "login.title": "تسجيل الدخول إلى docket",
-  "login.demoNote": "نسخة الهاكاثون: يعمل أي بريد إلكتروني وأي كلمة مرور. لا توجد حسابات حقيقية.",
+  "login.intro": "سجّل الدخول لعرض إصلاحاتك ومواعيدها وأدلتها.",
   "login.error": "يرجى إدخال بريد إلكتروني وكلمة مرور.",
   "login.iAmA": "أنا",
   "login.tenant": "مستأجر",
   "login.landlord": "مالك",
   "login.email": "البريد الإلكتروني",
   "login.password": "كلمة المرور",
-  "login.passwordPlaceholder": "أي شيء",
+  "login.passwordPlaceholder": "كلمة المرور",
   "login.submit": "تسجيل الدخول",
   "common.loading": "جارٍ التحميل…",
 
@@ -198,12 +198,12 @@ export const ar: Messages = {
   "escalation.council_environmental_health": "إبلاغ المجلس المحلي (environmental health)",
   "escalation.pre_action_letter": "رسالة مطالبة (pre-action protocol)",
 
-  "listen.listen": "🔊 استمع",
+  "listen.listen": "استمع",
   "listen.stop": "■ إيقاف",
   "listen.error": "تعذّر التشغيل",
 
   // Added for the re-laid-out case page
-  "case.landlord": "المالك",
+  "case.landlord": "مالكك",
   "case.landlordLabel": "المالك: {name}",
   "case.overdueCount": "متأخرة: {n}",
   "case.noChanges": "لا توجد تغييرات بعد.",
@@ -213,7 +213,7 @@ export const ar: Messages = {
   "case.shouldHaveFixed": "كان يجب على المالك إصلاح هذا قبل {date}",
   "case.canEscalateNow": "يمكنك الآن تصعيد الأمر.",
   "case.seeOptions": "اطّلع على خياراتك ←",
-  "listen.all": "🔊 استمع إلى الكل",
+  "listen.all": "استمع إلى الكل",
   "dutyType.target": "موعد Docket",
   "dutyType.lawAwaab": "موعد قانوني · Awaab's Law",
   "dutyType.reasonable": "واجب قانوني · مدة معقولة",

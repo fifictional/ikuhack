@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { fmtDateTime } from "@/lib/ui/labels";
 
 type Result =
   | { anchored: false }
@@ -44,7 +45,7 @@ export function VerifyForm() {
           <p className={`font-medium ${result.valid ? "text-ok" : "text-danger"}`}>
             {result.valid ? "✓ Unaltered since it was logged" : "✗ Proof failed"}
           </p>
-          <p className="text-sm text-muted">Anchored {new Date(result.anchoredAt).toLocaleString("en-GB")}</p>
+          <p className="text-sm text-muted">Anchored {fmtDateTime(new Date(result.anchoredAt).toISOString())}</p>
           <p className="text-xs text-muted">Record type: {KIND[result.kind] ?? result.kind}</p>
           {result.onChain?.checked && (
             <p className={`text-sm font-medium ${result.onChain.matches ? "text-ok" : "text-danger"}`}>

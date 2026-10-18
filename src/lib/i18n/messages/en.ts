@@ -26,14 +26,14 @@ export const en = {
 
   // Sign in
   "login.title": "Sign in to docket",
-  "login.demoNote": "Hackathon build: any email and any password work. There are no real accounts.",
+  "login.intro": "Sign in to see your repairs, deadlines and evidence.",
   "login.error": "Please enter an email and a password.",
   "login.iAmA": "I am a",
   "login.tenant": "Tenant",
   "login.landlord": "Landlord",
   "login.email": "Email",
   "login.password": "Password",
-  "login.passwordPlaceholder": "anything",
+  "login.passwordPlaceholder": "Your password",
   "login.submit": "Sign in",
   "common.loading": "Loading…",
 
@@ -213,12 +213,12 @@ export const en = {
   "escalation.pre_action_letter": "Letter of claim (pre-action protocol)",
 
   // Listen
-  "listen.listen": "🔊 Listen",
+  "listen.listen": "Listen",
   "listen.stop": "■ Stop",
   "listen.error": "Couldn't play this",
 
   // Added for the re-laid-out case page
-  "case.landlord": "Landlord",
+  "case.landlord": "Your landlord",
   "case.landlordLabel": "Landlord: {name}",
   "case.overdueCount": "{n} overdue",
   "case.noChanges": "No changes yet.",
@@ -228,7 +228,7 @@ export const en = {
   "case.shouldHaveFixed": "Your landlord should have fixed this by {date}",
   "case.canEscalateNow": "You can now escalate this.",
   "case.seeOptions": "See your options →",
-  "listen.all": "🔊 Listen to all",
+  "listen.all": "Listen to all",
   "dutyType.target": "Docket target",
   "dutyType.lawAwaab": "Legal deadline · Awaab's Law",
   "dutyType.reasonable": "Legal duty · reasonable time",

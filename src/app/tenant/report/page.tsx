@@ -1,6 +1,8 @@
 import { T } from "@/components/i18n/I18n";
 import { ReportFlow } from "@/components/report/ReportFlow";
 
+export const metadata = { title: "Report a problem" };
+
 export default function ReportPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">

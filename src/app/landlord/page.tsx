@@ -4,12 +4,17 @@ import { CaseList } from "@/components/case/CaseList";
 import { listCases } from "@/lib/cases/service";
 import { getNow } from "@/lib/db/settings";
 import { DEMO } from "@/lib/demo";
+import { landlordName } from "@/lib/people";
+
+export const metadata = { title: "Repairs compliance" };
 
 export default function LandlordOverview() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm text-muted">Riverside Homes Housing Association</p>
+        <Suspense fallback={<p className="h-5" />}>
+          <OrgName />
+        </Suspense>
         <h1 className="text-2xl font-semibold">Repairs compliance</h1>
       </div>
       <Suspense fallback={<p className="text-sm text-muted">Loading portfolio…</p>}>
@@ -24,6 +29,11 @@ export default function LandlordOverview() {
  * certificates live on /landlord/certificates and their proofs on /landlord/proof, so this
  * page needs only the case log — no compliance duties, no Solana.
  */
+async function OrgName() {
+  const name = await landlordName(DEMO.landlordId);
+  return name ? <p className="text-sm text-muted">{name}</p> : null;
+}
+
 async function Overview() {
   await connection();
   const [cases, now] = await Promise.all([listCases({ landlordId: DEMO.landlordId }), getNow()]);
@@ -34,8 +44,9 @@ async function Overview() {
   const dueToday = obligations.filter(
     (o) => o.status === "open" && new Date(o.dueAt).getTime() - now.getTime() < 86_400_000,
   ).length;
-  const closed = obligations.filter((o) => o.status === "met" || o.status === "met_late");
-  const onTime = closed.length ? Math.round((closed.filter((o) => o.status === "met").length / closed.length) * 100) : 100;
+  // On-time rate counts missed deadlines too (met late, or breached and still open), so it can't read 100% beside a breach.
+  const judged = obligations.filter((o) => o.status === "met" || o.status === "met_late" || o.status === "breached");
+  const onTime = judged.length ? `${Math.round((judged.filter((o) => o.status === "met").length / judged.length) * 100)}%` : "—";
 
   return (
     <div className="space-y-6">
@@ -43,7 +54,7 @@ async function Overview() {
         <Stat label="Open cases" value={cases.filter((c) => !["resolved", "closed"].includes(c.state?.phase ?? "")).length} />
         <Stat label="Legal deadlines missed" value={breached} tone={breached ? "danger" : undefined} />
         <Stat label="Due in 24h" value={dueToday} tone={dueToday ? "warn" : undefined} />
-        <Stat label="Met on time" value={`${onTime}%`} />
+        <Stat label="Met on time" value={onTime} />
       </div>
       <section className="space-y-3">
         <div>

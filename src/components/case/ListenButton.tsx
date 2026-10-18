@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useLocale, useT } from "@/components/i18n/I18n";
+import { SpeakerIcon } from "@/components/icons";
 
 type State = "idle" | "loading" | "playing";
 
@@ -50,7 +51,16 @@ export function ListenButton({ caseId, text, label }: { caseId: string; text: st
         disabled={state === "loading"}
         className="rounded-lg border border-primary px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary-tint disabled:opacity-60"
       >
-        {state === "loading" ? t("common.loading") : state === "playing" ? t("listen.stop") : label ?? t("listen.listen")}
+        {state === "loading" ? (
+          t("common.loading")
+        ) : state === "playing" ? (
+          t("listen.stop")
+        ) : (
+          <span className="inline-flex items-center gap-1.5">
+            <SpeakerIcon size={14} />
+            {label ?? t("listen.listen")}
+          </span>
+        )}
       </button>
       {error && <span role="alert" className="text-xs text-danger">{error}</span>}
     </span>

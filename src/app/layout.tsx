@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], weight: ["600", "700", "800"] });
 
 export const metadata: Metadata = {
-  title: "Docket — rental repairs, on the clock and on the record",
+  // Pages set a short title ("Your repairs"); the template adds the brand.
+  title: { default: "Docket — rental repairs, on the clock and on the record", template: "%s — Docket" },
   description: "Report any repair in seconds. Docket works out the landlord's legal deadline and keeps tamper-evident evidence for both sides.",
 };
 
@@ -34,8 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Suspense>
             <Link href="/proof" className="hidden font-medium text-ink/80 hover:text-primary sm:inline"><T k="nav.proof" /></Link>
             <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-primary sm:inline"><T k="nav.verify" /></Link>
-            <Link href="/demo" className="ms-auto hidden font-medium text-ink/80 hover:text-primary sm:inline"><T k="nav.demo" /></Link>
-            <div className="ms-auto flex items-center gap-4 sm:ms-0">
+            <div className="ms-auto flex items-center gap-4">
               {/* Session read must live in its own boundary so the header still prerenders. */}
               <Suspense fallback={null}>
                 <SessionNav />

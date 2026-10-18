@@ -21,14 +21,14 @@ export const ro: Messages = {
   "home.landlordBody": "Termene legale în timp real pentru toate locuințele, cu un istoric care dovedește conformitatea.",
 
   "login.title": "Conectați-vă la docket",
-  "login.demoNote": "Versiune de hackathon: funcționează orice e-mail și orice parolă. Nu există conturi reale.",
+  "login.intro": "Conectați-vă pentru a vedea reparațiile, termenele și dovezile.",
   "login.error": "Introduceți un e-mail și o parolă.",
   "login.iAmA": "Sunt",
   "login.tenant": "Chiriaș",
   "login.landlord": "Proprietar",
   "login.email": "E-mail",
   "login.password": "Parolă",
-  "login.passwordPlaceholder": "orice",
+  "login.passwordPlaceholder": "Parola dvs.",
   "login.submit": "Conectare",
   "common.loading": "Se încarcă…",
 
@@ -198,12 +198,12 @@ export const ro: Messages = {
   "escalation.council_environmental_health": "Sesizați consiliul local (environmental health)",
   "escalation.pre_action_letter": "Notificare prealabilă (pre-action protocol)",
 
-  "listen.listen": "🔊 Ascultați",
+  "listen.listen": "Ascultați",
   "listen.stop": "■ Opriți",
   "listen.error": "Nu s-a putut reda",
 
   // Added for the re-laid-out case page
-  "case.landlord": "Proprietarul",
+  "case.landlord": "Proprietarul dvs.",
   "case.landlordLabel": "Proprietar: {name}",
   "case.overdueCount": "Depășite: {n}",
   "case.noChanges": "Încă nu există modificări.",
@@ -213,7 +213,7 @@ export const ro: Messages = {
   "case.shouldHaveFixed": "Proprietarul trebuia să repare asta până la {date}",
   "case.canEscalateNow": "Acum puteți escalada situația.",
   "case.seeOptions": "Vedeți opțiunile →",
-  "listen.all": "🔊 Ascultați tot",
+  "listen.all": "Ascultați tot",
   "dutyType.target": "Termen Docket",
   "dutyType.lawAwaab": "Termen legal · Awaab's Law",
   "dutyType.reasonable": "Obligație legală · termen rezonabil",

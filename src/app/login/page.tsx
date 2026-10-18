@@ -7,7 +7,7 @@ import { getLocale } from "@/lib/i18n/server";
 import { getRole, type Role } from "@/lib/session";
 import { signIn } from "./actions";
 
-export const metadata = { title: "Sign in — Docket" };
+export const metadata = { title: "Sign in" };
 
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
@@ -16,7 +16,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         <LogoMark size={44} className="mx-auto" />
         <h1 className="text-2xl font-semibold"><T k="login.title" /></h1>
         <p className="text-sm text-muted">
-          <T k="login.demoNote" />
+          <T k="login.intro" />
         </p>
       </div>
       {/* Reads the request (session cookie + error query), so it streams in behind a boundary. */}

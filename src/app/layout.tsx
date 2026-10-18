@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { Logo } from "@/components/brand/Logo";
+import { LawCheckFooter } from "@/components/LawCheckFooter";
 import { RoleNavLink, SessionNav } from "@/components/SessionNav";
 import "./globals.css";
 
@@ -38,7 +39,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 pb-16">{children}</main>
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background">
+          {/* Reads the DB, so it streams in behind a boundary on every page. */}
+          <Suspense fallback={null}>
+            <LawCheckFooter />
+          </Suspense>
+        </footer>
       </body>
     </html>
   );

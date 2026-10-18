@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Obligation } from "@/lib/domain/types";
-import { deadlineLabel, fmtDateTime, plainDuty } from "@/lib/ui/labels";
+import { dutyType, fmtDateTime, plainDuty } from "@/lib/ui/labels";
 import { Countdown } from "./Countdown";
 import { LawGraphPanel } from "@/components/law/LawGraphPanel";
 
@@ -45,7 +45,9 @@ function ObligationRow({
   landlordName: string;
   onWhy: () => void;
 }) {
-  const kind = deadlineLabel(o);
+  const type = dutyType(o);
+  const live = o.status === "open" || o.status === "breached";
+
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-0">
       <div className="min-w-0">
@@ -58,31 +60,46 @@ function ObligationRow({
               {o.title}
             </>
           )}
-          {o.provisional && <span className="ml-2 text-xs text-warn">{role === "tenant" ? "being checked" : "provisional"}</span>}
         </p>
-        <p className="text-xs text-muted">
-          {kind} ·{" "}
-          <button type="button" onClick={onWhy} className="font-medium text-primary underline underline-offset-2 hover:text-primary-dark">
-            why?
-          </button>
-          {o.legalBasis.url && (
-            <>
-              {" · "}
-              <a href={o.legalBasis.url} target="_blank" rel="noreferrer" className="underline hover:text-primary">
-                {o.legalBasis.citation}
-              </a>
-            </>
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          <span
+            className={
+              type.tone === "dark"
+                ? "rounded-full bg-primary px-2 py-0.5 text-[11px] font-medium text-white"
+                : "rounded-full border border-border bg-panel px-2 py-0.5 text-[11px] text-muted"
+            }
+          >
+            {type.text}
+          </span>
+          {o.provisional && (
+            <span className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-[11px] text-warn">Being checked</span>
           )}
-        </p>
-        {o.pausedMs > 0 && <p className="text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>}
-      </div>
-      <div className="shrink-0 text-right">
-        {o.status === "open" || o.status === "breached" ? (
-          <Countdown dueAt={o.dueAt} serverNow={now} />
-        ) : (
-          <span className="text-sm text-ok">{o.status === "met" ? "Done on time" : "Done late"}</span>
+          <button
+            type="button"
+            onClick={onWhy}
+            className="text-[11px] font-medium text-primary underline underline-offset-2 hover:text-primary-dark"
+          >
+            Why?
+          </button>
+        </div>
+        {o.pausedMs > 0 && (
+          <p className="mt-1 text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>
         )}
-        <p className="text-xs text-muted">{fmtDateTime(o.dueAt)}</p>
+      </div>
+      <div className="shrink-0 whitespace-nowrap text-right">
+        {live ? (
+          <>
+            <Countdown dueAt={o.dueAt} serverNow={now} />
+            <p className="text-xs text-muted">
+              {o.status === "breached" ? "was due" : "due"} {fmtDateTime(o.dueAt)}
+            </p>
+          </>
+        ) : (
+          <>
+            <span className="text-sm text-ok">{o.status === "met" ? "Done on time" : "Done late"}</span>
+            <p className="text-xs text-muted">{fmtDateTime(o.dueAt)}</p>
+          </>
+        )}
       </div>
     </div>
   );

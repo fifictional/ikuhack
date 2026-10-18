@@ -51,47 +51,99 @@ export function LandlordActions({ caseId, events }: { caseId: string; events: Ca
   return (
     <div className="space-y-4 rounded-xl border border-border bg-surface p-4 text-sm">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Landlord actions</h2>
-      <Btn disabled={busy} onClick={() => landlord.send({ type: "ACKNOWLEDGED" })}>Acknowledge</Btn>
 
-      <div className="space-y-1">
-        <label className="block text-xs text-muted">Book access (24h written notice required)</label>
-        <input type="datetime-local" value={slot} onChange={(e) => setSlot(e.target.value)} className="w-full rounded border border-border px-2 py-1" />
-        <Btn disabled={busy || !slot} onClick={() => landlord.send({ type: "ACCESS_PROPOSED", slotStart: new Date(slot).toISOString() })}>
-          Send access notice
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Respond</p>
+        <Btn className="w-full" disabled={busy} onClick={() => landlord.send({ type: "ACKNOWLEDGED" })}>
+          Acknowledge the report
         </Btn>
       </div>
 
-      {openProposal && (
-        <div className="flex flex-wrap gap-2">
-          <Btn disabled={busy} onClick={() => pro.send({ type: "ACCESS_OUTCOME", proposalId: openProposal.id, outcome: "completed" })}>Visit done</Btn>
-          <Btn disabled={busy} onClick={() => pro.send({ type: "ACCESS_OUTCOME", proposalId: openProposal.id, outcome: "tenant_no_access" })}>No access</Btn>
-        </div>
-      )}
+      <div className="space-y-2 border-t border-border pt-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Book access</p>
+        <label className="block text-xs text-muted">24h written notice required</label>
+        <input
+          type="datetime-local"
+          value={slot}
+          onChange={(e) => setSlot(e.target.value)}
+          className="w-full rounded-md border border-border bg-surface px-2 py-1.5"
+        />
+        <Btn className="w-full" disabled={busy || !slot} onClick={() => landlord.send({ type: "ACCESS_PROPOSED", slotStart: new Date(slot).toISOString() })}>
+          Send access notice
+        </Btn>
+        {openProposal && (
+          <div className="grid grid-cols-2 gap-2">
+            <Btn disabled={busy} onClick={() => pro.send({ type: "ACCESS_OUTCOME", proposalId: openProposal.id, outcome: "completed" })}>
+              Visit done
+            </Btn>
+            <Btn disabled={busy} onClick={() => pro.send({ type: "ACCESS_OUTCOME", proposalId: openProposal.id, outcome: "tenant_no_access" })}>
+              No access
+            </Btn>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-2 border-t border-border pt-3">
-        <div className="flex gap-2">
-          <span className="text-xs text-muted">Record findings as</span>
-          <select value={proKind} onChange={(e) => setProKind(e.target.value as typeof proKind)} className="rounded border border-border text-xs">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Record findings as</p>
+          <select
+            value={proKind}
+            onChange={(e) => setProKind(e.target.value as typeof proKind)}
+            className="rounded-md border border-border bg-surface px-2 py-1 text-xs"
+          >
             <option value="contractor">contractor</option>
             <option value="surveyor">surveyor</option>
           </select>
         </div>
-        <select defaultValue="" onChange={(e) => e.target.value && assert("issue.category", e.target.value)} className="w-full rounded border border-border px-2 py-1">
-          <option value="" disabled>Reclassify category…</option>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        <select
+          defaultValue=""
+          onChange={(e) => e.target.value && assert("issue.category", e.target.value)}
+          className="w-full rounded-md border border-border bg-surface px-2 py-1.5"
+        >
+          <option value="" disabled>
+            Reclassify category…
+          </option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
         </select>
-        <select defaultValue="" onChange={(e) => e.target.value && assert("issue.severity", e.target.value)} className="w-full rounded border border-border px-2 py-1">
-          <option value="" disabled>Assess severity…</option>
-          {SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}
+        <select
+          defaultValue=""
+          onChange={(e) => e.target.value && assert("issue.severity", e.target.value)}
+          className="w-full rounded-md border border-border bg-surface px-2 py-1.5"
+        >
+          <option value="" disabled>
+            Assess severity…
+          </option>
+          {SEVERITIES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </select>
-        <Btn disabled={busy} onClick={() => assert("cause.tenantDamage", true)}>Damage caused by household</Btn>
+        <Btn className="w-full" disabled={busy} onClick={() => assert("cause.tenantDamage", true)}>
+          Damage caused by household
+        </Btn>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t border-border pt-3">
-        <Btn disabled={busy} onClick={() => pro.send({ type: "INVESTIGATION_COMPLETED", findings: "Inspection completed" })}>Investigation done</Btn>
-        <Btn disabled={busy} onClick={() => landlord.send({ type: "SUMMARY_SENT", summary: "Summary sent" })}>Summary sent</Btn>
-        <Btn disabled={busy} onClick={() => pro.send({ type: "MADE_SAFE" })}>Made safe</Btn>
-        <Btn disabled={busy} onClick={() => pro.send({ type: "WORKS_STARTED" })}>Works started</Btn>
+      <div className="space-y-2 border-t border-border pt-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Update progress</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Btn disabled={busy} onClick={() => pro.send({ type: "INVESTIGATION_COMPLETED", findings: "Inspection completed" })}>
+            Investigation done
+          </Btn>
+          <Btn disabled={busy} onClick={() => landlord.send({ type: "SUMMARY_SENT", summary: "Summary sent" })}>
+            Summary sent
+          </Btn>
+          <Btn disabled={busy} onClick={() => pro.send({ type: "MADE_SAFE" })}>
+            Made safe
+          </Btn>
+          <Btn disabled={busy} onClick={() => pro.send({ type: "WORKS_STARTED" })}>
+            Works started
+          </Btn>
+        </div>
       </div>
 
       <div className="space-y-2 border-t border-border pt-3">
@@ -111,7 +163,9 @@ export function LandlordActions({ caseId, events }: { caseId: string; events: Ca
           {checking ? "Gemini is checking the photos…" : "Mark works complete"}
         </button>
         {completed && !checking && (
-          <Btn className="w-full" onClick={runCheck}>Re-check photos with Gemini</Btn>
+          <Btn className="w-full" onClick={runCheck}>
+            Re-check photos with Gemini
+          </Btn>
         )}
         {check && <FixCheckResult check={check} />}
       </div>

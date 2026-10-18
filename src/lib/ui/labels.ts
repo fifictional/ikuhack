@@ -113,3 +113,30 @@ export const SEVERITY_PLAIN: Record<Severity, string> = {
 
 export const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+/** "Sat 17 Oct" — short day label for timeline ends. */
+export const fmtDay = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short" });
+
+/** "Sunday 25 October" — day-group heading for the change feed. */
+export const fmtDayLong = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", { timeZone: "Europe/London", weekday: "long", day: "numeric", month: "long" });
+
+/** "20:10" — time only, for the change feed. */
+export const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit" });
+
+/**
+ * Short pill describing where a duty's clock comes from. Dark = the law sets it;
+ * light = Docket's own service target.
+ */
+export function dutyType(o: Obligation): { text: string; tone: "dark" | "light" } {
+  if (!o.legalBasis.statutory) return { text: "Docket target", tone: "light" };
+  if (o.legalBasis.deadline === "law") {
+    return {
+      text: o.legalBasis.citation.includes("Awaab") ? "Legal deadline · Awaab's Law" : "Legal deadline",
+      tone: "dark",
+    };
+  }
+  return { text: "Legal duty · reasonable time", tone: "dark" };
+}

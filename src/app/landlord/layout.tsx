@@ -1,4 +1,5 @@
 import { LandlordNav } from "@/components/LandlordNav";
+import { LocaleScope } from "@/components/i18n/I18n";
 import { requireRole } from "@/lib/session";
 
 /**
@@ -10,10 +11,13 @@ export const instant = false;
 
 export default async function LandlordLayout({ children }: LayoutProps<"/landlord">) {
   await requireRole("landlord");
+  // The landlord side stays in English (see docs/LANGUAGES.md).
   return (
-    <div className="space-y-6">
-      <LandlordNav />
-      {children}
-    </div>
+    <LocaleScope locale="en">
+      <div lang="en-GB" dir="ltr" className="space-y-6">
+        <LandlordNav />
+        {children}
+      </div>
+    </LocaleScope>
   );
 }

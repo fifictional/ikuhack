@@ -3,18 +3,9 @@ import { notFound } from "next/navigation";
 import { getCase, recompute } from "@/lib/cases/service";
 import { getCachedChecks, getCaptureMethods } from "@/lib/evidence/authenticity";
 import type { Category, Obligation, Severity } from "@/lib/domain/types";
-import {
-  CATEGORY_LABEL,
-  FACT_PLAIN,
-  PHASE_LABEL,
-  SEVERITY_PLAIN,
-  describeEvent,
-  factValuePlain,
-  fmtDateTime,
-  fmtTime,
-  plainDuty,
-  sourcePlain,
-} from "@/lib/ui/labels";
+import { FACT_PLAIN, describeEvent, factValuePlain, fmtDateTime, fmtTime, sourcePlain } from "@/lib/ui/labels";
+import { type Locale, type MessageKey, type T, formatDateTime, plainDutyIn, translator } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n/server";
 import { buildDutyTypes, describeRevision, groupByDay } from "@/lib/ui/revisions";
 import { Countdown } from "./Countdown";
 import { PhotoAuthenticity } from "./PhotoAuthenticity";
@@ -30,6 +21,10 @@ import { TenantActions } from "./TenantActions";
  */
 export async function CaseView({ caseId, role }: { caseId: string; role: "tenant" | "landlord" }) {
   await connection();
+  // Tenants see their chosen language; the landlord view, citations and the record stay English.
+  const locale: Locale = role === "tenant" ? await getLocale() : "en";
+  const t = translator(locale);
+  const landlordWord = t("case.landlord");
   // Re-project at the current (demo) time so clocks and breaches are never stale.
   await recompute(caseId).catch(() => notFound());
   const c = await getCase(caseId);
@@ -55,37 +50,40 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
       {/* Full-width header: the landlord's name appears here, and only here. */}
       <header className="space-y-1 lg:col-span-2">
         <p className="text-sm text-muted">
-          {c.address} · Landlord: {c.landlord_name}
+          {c.address} · {t("case.landlordLabel", { name: c.landlord_name })}
         </p>
         <h1 className="text-2xl font-semibold">{c.title}</h1>
         <div className="flex flex-wrap gap-2 text-xs">
           {/* Emergency first. */}
-          {severity && <Pill tone={severity === "emergency" ? "danger" : undefined}>{SEVERITY_PLAIN[severity]}</Pill>}
-          <Pill>{PHASE_LABEL[s.phase]}</Pill>
-          {category && <Pill>{CATEGORY_LABEL[category]}</Pill>}
-          {vulnerable && <Pill tone="warn">Vulnerable occupant</Pill>}
+          {severity && <Pill tone={severity === "emergency" ? "danger" : undefined}>{t(`severity.${severity}` as MessageKey)}</Pill>}
+          <Pill>{t(`phase.${s.phase}` as MessageKey)}</Pill>
+          {category && <Pill>{t(`category.${category}` as MessageKey)}</Pill>}
+          {vulnerable && <Pill tone="warn">{t("case.vulnerable")}</Pill>}
         </div>
       </header>
 
       {/* Main column. `contents` on mobile lets its children take part in the page order. */}
       <div className="contents lg:block lg:space-y-6">
         {role === "tenant" && (
-          <div className="order-1">
-            <NextStep o={next} now={s.computedAt} caseId={caseId} />
+          <div className="order-1 space-y-3">
+            <NextStep o={next} now={s.computedAt} caseId={caseId} locale={locale} />
+            {locale !== "en" && (
+              <p className="rounded-lg border border-border bg-panel px-3 py-2 text-xs text-muted">{t("case.englishNote")}</p>
+            )}
           </div>
         )}
 
         <div className="order-3">
           <Section
-            title={role === "tenant" ? "Everything that's due" : "Who must do what, by when"}
-            right={overdueCount > 0 ? <span className="shrink-0 text-xs font-semibold text-danger">{overdueCount} overdue</span> : undefined}
+            title={role === "tenant" ? t("case.everythingDue") : "Who must do what, by when"}
+            right={overdueCount > 0 ? <span className="shrink-0 text-xs font-semibold text-danger">{t("case.overdueCount", { n: overdueCount })}</span> : undefined}
           >
-            {open.length === 0 && <p className="text-sm text-muted">Nothing is due right now.</p>}
-            <ObligationList obligations={open} now={s.computedAt} role={role} landlordName="Landlord" />
+            {open.length === 0 && <p className="text-sm text-muted">{t("case.nothingDueShort")}</p>}
+            <ObligationList obligations={open} now={s.computedAt} role={role} landlordName={landlordWord} />
             {done.length > 0 && (
               <details className="text-sm">
-                <summary className="cursor-pointer py-2 text-muted">{done.length} done</summary>
-                <ObligationList obligations={done} now={s.computedAt} role={role} landlordName="Landlord" />
+                <summary className="cursor-pointer py-2 text-muted">{t("case.doneCount", { n: done.length })}</summary>
+                <ObligationList obligations={done} now={s.computedAt} role={role} landlordName={landlordWord} />
               </details>
             )}
           </Section>
@@ -93,10 +91,10 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
 
         <div className="order-4">
           <Section
-            title={role === "tenant" ? "What changed and why" : "How Docket's view changed"}
-            right={<ListenButton caseId={caseId} text={c.revisions.map((r) => r.summary).join(" ")} label="🔊 Listen to all" />}
+            title={role === "tenant" ? t("case.whatChanged") : "How Docket's view changed"}
+            right={<ListenButton caseId={caseId} text={c.revisions.map((r) => r.summary).join(" ")} label={t("listen.all")} />}
           >
-            {c.revisions.length === 0 && <p className="text-sm text-muted">No changes yet.</p>}
+            {c.revisions.length === 0 && <p className="text-sm text-muted">{t("case.noChanges")}</p>}
             <div className="space-y-4">
               {revisionGroups.map((g) => (
                 <div key={g.day} className="space-y-2">
@@ -128,7 +126,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
 
         {(s.conflicts.length > 0 || s.notes.length > 0) && (
           <div className="order-5">
-            <Section title="Things to know">
+            <Section title={t("case.thingsToKnow")}>
               {s.conflicts.map((cf) => (
                 <p key={cf.key} className="text-sm">
                   ⚖️ Sources disagree on <b>{FACT_PLAIN[cf.key]}</b>:{" "}
@@ -148,7 +146,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
         )}
 
         <div className="order-7">
-          <Section title="What Docket believed at the time">
+          <Section title={t("case.believed")}>
             <BeliefTimeline
               caseId={caseId}
               now={s.computedAt}
@@ -163,11 +161,11 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
         <div className="order-8">
           <details className="group rounded-xl border border-border bg-surface">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 [&::-webkit-details-marker]:hidden">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Full record</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">{t("case.fullRecord")}</h2>
               <span className="text-xs text-muted">
-                {c.events.length} timestamped {c.events.length === 1 ? "entry" : "entries"} ·{" "}
-                <span className="group-open:hidden">Show ▾</span>
-                <span className="hidden group-open:inline">Hide ▴</span>
+                {t("case.entries", { n: c.events.length })} ·{" "}
+                <span className="group-open:hidden">{t("case.show")}</span>
+                <span className="hidden group-open:inline">{t("case.hide")}</span>
               </span>
             </summary>
             <ol className="space-y-1 border-t border-border px-4 py-3">
@@ -199,10 +197,10 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
         </div>
 
         <div className="order-6">
-          <Section title={`Evidence (${evidence.length})`}>
+          <Section title={t("case.evidence", { n: evidence.length })}>
             {evidence.length === 0 && (
               <p className="rounded-lg border border-border bg-background p-3 text-sm text-muted">
-                No photos yet. Adding some makes a complaint or claim much stronger.
+                {t("case.noPhotos")}
               </p>
             )}
             {role === "landlord" ? (
@@ -248,7 +246,7 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
               </ul>
             )}
             <a href={`/api/cases/${caseId}/bundle`} className="block text-sm font-medium text-primary underline" target="_blank">
-              Download evidence bundle (PDF)
+              {t("case.bundle")}
             </a>
           </Section>
         </div>
@@ -258,12 +256,13 @@ export async function CaseView({ caseId, role }: { caseId: string; role: "tenant
 }
 
 /** Tenant-only headline: the one thing that matters most right now. */
-function NextStep({ o, now, caseId }: { o: Obligation | undefined; now: string; caseId: string }) {
+function NextStep({ o, now, caseId, locale }: { o: Obligation | undefined; now: string; caseId: string; locale: Locale }) {
+  const t: T = translator(locale);
   if (!o) {
     return (
       <div className="rounded-xl border border-border bg-surface p-4">
-        <p className="text-sm text-muted">What happens next</p>
-        <p className="text-lg font-semibold">Nothing is due right now. We&apos;ll update you when anything changes.</p>
+        <p className="text-sm text-muted">{t("case.whatNext")}</p>
+        <p className="text-lg font-semibold">{t("case.nothingDue")}</p>
       </div>
     );
   }
@@ -272,7 +271,7 @@ function NextStep({ o, now, caseId }: { o: Obligation | undefined; now: string; 
   if (breached) {
     return (
       <div className="rounded-xl border-2 border-danger bg-surface p-4">
-        <p className="text-lg font-semibold">Your landlord should have fixed this by {fmtDateTime(o.dueAt)}</p>
+        <p className="text-lg font-semibold">{t("case.shouldHaveFixed", { date: formatDateTime(o.dueAt, locale) })}</p>
         <div className="mt-2 flex items-center gap-3">
           <Countdown dueAt={o.dueAt} serverNow={now} />
           <ListenButton
@@ -282,9 +281,9 @@ function NextStep({ o, now, caseId }: { o: Obligation | undefined; now: string; 
         </div>
         <div className="my-3 border-t border-border" />
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm">You can now escalate this.</p>
+          <p className="text-sm">{t("case.canEscalateNow")}</p>
           <a href="#escalate" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-dark">
-            See your options →
+            {t("case.seeOptions")}
           </a>
         </div>
       </div>
@@ -293,14 +292,14 @@ function NextStep({ o, now, caseId }: { o: Obligation | undefined; now: string; 
 
   return (
     <div className="rounded-xl border-2 border-primary bg-primary-tint p-4">
-      <p className="text-sm text-muted">What happens next</p>
+      <p className="text-sm text-muted">{t("case.whatNext")}</p>
       <p className="text-lg font-semibold">
-        {plainDuty(o, "Landlord")} by {fmtDateTime(o.dueAt)}
+        {t("case.dueBy", { duty: plainDutyIn(locale, o, t("case.landlord")), date: formatDateTime(o.dueAt, locale) })}
       </p>
       <div className="mt-1 flex items-center gap-2">
         <Countdown dueAt={o.dueAt} serverNow={now} />
         <span className="text-xs text-muted">
-          · {o.legalBasis.deadline === "law" ? "legal deadline" : o.legalBasis.statutory ? "legal duty, Docket target time" : "Docket target"}
+          · {t(o.legalBasis.deadline === "law" ? "case.legalDeadline" : o.legalBasis.statutory ? "case.legalDutyTarget" : "case.docketTarget")}
         </span>
       </div>
     </div>

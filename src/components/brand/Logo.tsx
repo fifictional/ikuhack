@@ -29,7 +29,8 @@ export function LogoMark({ size = 32, className }: { size?: number; className?: 
 
 export function Logo({ size = 28, className }: { size?: number; className?: string }) {
   return (
-    <span className={`inline-flex items-center ${className ?? ""}`} style={{ gap: size * 0.45 }}>
+    // dir="ltr": the logo keeps its D-then-wordmark order in right-to-left languages.
+    <span dir="ltr" className={`inline-flex items-center ${className ?? ""}`} style={{ gap: size * 0.45 }}>
       <LogoMark size={size} />
       <span
         className="font-display font-extrabold leading-none tracking-tight text-ink"

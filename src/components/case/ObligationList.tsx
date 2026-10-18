@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { Obligation } from "@/lib/domain/types";
-import { dutyType, fmtDateTime, plainDuty } from "@/lib/ui/labels";
+import { dutyTypeIn, formatDateTime, plainDutyIn } from "@/lib/i18n";
+import { useLocale, useT } from "@/components/i18n/I18n";
 import { Countdown } from "./Countdown";
 import { LawGraphPanel } from "@/components/law/LawGraphPanel";
 
@@ -45,7 +46,10 @@ function ObligationRow({
   landlordName: string;
   onWhy: () => void;
 }) {
-  const type = dutyType(o);
+  // Inside the landlord section the scope is English, so this stays English there.
+  const locale = useLocale();
+  const t = useT();
+  const type = dutyTypeIn(locale, o);
   const live = o.status === "open" || o.status === "breached";
 
   return (
@@ -53,10 +57,10 @@ function ObligationRow({
       <div className="min-w-0">
         <p className="text-sm font-medium">
           {role === "tenant" ? (
-            plainDuty(o, landlordName)
+            plainDutyIn(locale, o, landlordName)
           ) : (
             <>
-              <span className="mr-2 text-xs uppercase text-muted">{o.party}</span>
+              <span className="me-2 text-xs uppercase text-muted">{o.party}</span>
               {o.title}
             </>
           )}
@@ -72,32 +76,32 @@ function ObligationRow({
             {type.text}
           </span>
           {o.provisional && (
-            <span className="rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-[11px] text-warn">Being checked</span>
+            <span className="inline-block rounded-full border border-warn/40 bg-warn/10 px-2 py-0.5 text-[11px] text-warn first-letter:uppercase">{t("obligation.beingChecked")}</span>
           )}
           <button
             type="button"
             onClick={onWhy}
-            className="text-[11px] font-medium text-primary underline underline-offset-2 hover:text-primary-dark"
+            className="inline-block text-[11px] font-medium text-primary underline underline-offset-2 first-letter:uppercase hover:text-primary-dark"
           >
-            Why?
+            {t("obligation.why")}
           </button>
         </div>
         {o.pausedMs > 0 && (
-          <p className="mt-1 text-xs text-muted">Clock paused {Math.round(o.pausedMs / 3_600_000)}h after a missed appointment</p>
+          <p className="mt-1 text-xs text-muted">{t("obligation.clockPaused", { h: Math.round(o.pausedMs / 3_600_000) })}</p>
         )}
       </div>
-      <div className="shrink-0 whitespace-nowrap text-right">
+      <div className="shrink-0 whitespace-nowrap text-end">
         {live ? (
           <>
             <Countdown dueAt={o.dueAt} serverNow={now} />
             <p className="text-xs text-muted">
-              {o.status === "breached" ? "was due" : "due"} {fmtDateTime(o.dueAt)}
+              {t(o.status === "breached" ? "obligation.wasDue" : "obligation.due", { date: formatDateTime(o.dueAt, locale) })}
             </p>
           </>
         ) : (
           <>
-            <span className="text-sm text-ok">{o.status === "met" ? "Done on time" : "Done late"}</span>
-            <p className="text-xs text-muted">{fmtDateTime(o.dueAt)}</p>
+            <span className="text-sm text-ok">{t(o.status === "met" ? "obligation.doneOnTime" : "obligation.doneLate")}</span>
+            <p className="text-xs text-muted">{formatDateTime(o.dueAt, locale)}</p>
           </>
         )}
       </div>

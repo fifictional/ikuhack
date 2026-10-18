@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { LawCheckFooter } from "@/components/LawCheckFooter";
 import { RoleNavLink, SessionNav } from "@/components/SessionNav";
+import { I18nProvider, LanguageSwitcher, T } from "@/components/i18n/I18n";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -21,22 +22,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en-GB" className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
+        <I18nProvider>
         <header className="border-b border-border bg-background">
           <nav className="mx-auto flex max-w-5xl items-center gap-x-4 px-4 py-3 text-sm sm:gap-x-6">
-            <Link href="/" aria-label="Docket home" className="mr-2">
+            <Link href="/" aria-label="Docket home" className="me-2">
               <Logo size={24} />
             </Link>
             {/* Both read the session cookie, so each needs its own boundary to keep the header static. */}
             <Suspense fallback={null}>
               <RoleNavLink />
             </Suspense>
-            <Link href="/proof" className="hidden font-medium text-ink/80 hover:text-primary sm:inline">Proof</Link>
-            <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-primary sm:inline">Verify</Link>
-            <Link href="/demo" className="ml-auto hidden font-medium text-ink/80 hover:text-primary sm:inline">Demo</Link>
-            {/* Session read must live in its own boundary so the header still prerenders. */}
-            <Suspense fallback={null}>
-              <SessionNav />
-            </Suspense>
+            <Link href="/proof" className="hidden font-medium text-ink/80 hover:text-primary sm:inline"><T k="nav.proof" /></Link>
+            <Link href="/verify" className="hidden font-medium text-ink/80 hover:text-primary sm:inline"><T k="nav.verify" /></Link>
+            <Link href="/demo" className="ms-auto hidden font-medium text-ink/80 hover:text-primary sm:inline"><T k="nav.demo" /></Link>
+            <div className="ms-auto flex items-center gap-4 sm:ms-0">
+              {/* Session read must live in its own boundary so the header still prerenders. */}
+              <Suspense fallback={null}>
+                <SessionNav />
+              </Suspense>
+              {/* Language button sits in the top-right corner on every screen size. */}
+              <LanguageSwitcher />
+            </div>
           </nav>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 pb-16">{children}</main>
@@ -46,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <LawCheckFooter />
           </Suspense>
         </footer>
+        </I18nProvider>
       </body>
     </html>
   );

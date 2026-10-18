@@ -4,6 +4,10 @@ import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CALL_LANGUAGES, type CallLanguageCode } from "@/lib/voice/languages";
+import { useLocale, useT } from "@/components/i18n/I18n";
+
+/** Marker for the 3-minute cut-off, translated at render time. */
+const CALL_ENDED = "__call_ended__";
 
 /** Hard stop for a single call, as a backstop to the agent's max-duration setting (credits are billed per minute). */
 const MAX_CALL_MS = 3 * 60_000;
@@ -40,6 +44,8 @@ function transcriptText(lines: Line[]) {
 }
 
 function VoiceInner({ onFallback }: { onFallback?: () => void }) {
+  const t = useT();
+  const locale = useLocale();
   const [caseId, setCaseId] = useState<string | null>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +113,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
     if (!live) return;
     const t = setTimeout(() => {
       endSession();
-      setError("Call ended after 3 minutes. Anything you said is saved on your case.");
+      setError(CALL_ENDED);
     }, MAX_CALL_MS);
     return () => clearTimeout(t);
   }, [live, endSession]);
@@ -150,7 +156,10 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
     }
   }
 
-  const [language, setLanguage] = useState<CallLanguageCode>("en");
+  // Default the call to the language the site is shown in (every website language is a call language).
+  const [language, setLanguage] = useState<CallLanguageCode>(() =>
+    CALL_LANGUAGES.some((l) => l.code === locale) ? (locale as CallLanguageCode) : "en",
+  );
 
   async function start() {
     setError(null);
@@ -180,7 +189,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
     <div className="space-y-4 rounded-xl border border-border bg-surface p-6">
       <div className="text-center">
         {!live && !connecting && (
-          <div role="radiogroup" aria-label="Call language" className="mb-4 flex flex-wrap justify-center gap-2">
+          <div role="radiogroup" aria-label={t("voice.callLanguage")} className="mb-4 flex flex-wrap justify-center gap-2">
             {CALL_LANGUAGES.map((l) => (
               <button
                 key={l.code}
@@ -189,7 +198,7 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
                 onClick={() => setLanguage(l.code)}
                 className={`rounded-full border px-3 py-1 text-sm ${language === l.code ? "border-primary bg-primary text-white" : "border-border bg-surface hover:border-primary"}`}
               >
-                {l.label}
+                {l.code === "auto" ? t("voice.detect") : l.label}
               </button>
             ))}
           </div>
@@ -197,21 +206,21 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
         <button
           onClick={live ? endSession : start}
           disabled={connecting}
-          aria-label={live ? "End call" : "Start talking to Docket"}
+          aria-label={live ? t("voice.endCall") : t("voice.start")}
           className={`mx-auto flex h-28 w-28 items-center justify-center rounded-full font-semibold text-white transition disabled:opacity-60 ${
             live && !paused && conversation.isSpeaking ? "scale-105 bg-highlight" : "bg-primary hover:bg-primary-dark"
           }`}
         >
-          {live ? "End" : connecting ? "Connecting…" : "Tap to talk"}
+          {live ? t("voice.end") : connecting ? t("voice.connecting") : t("voice.tapToTalk")}
         </button>
         <p className="mt-3 text-sm text-muted" aria-live="polite">
           {!live
-            ? language === "auto" ? "Speak in any language. Tell us what's wrong and where." : "Tap and tell us what's wrong and where."
+            ? language === "auto" ? t("voice.hintAny") : t("voice.hintPicked")
             : paused
-              ? "Paused: your microphone is off. Tap Resume when you're ready."
+              ? t("voice.pausedHint")
               : conversation.isSpeaking
-                ? "Docket is speaking…"
-                : "Listening…"}
+                ? t("voice.speaking")
+                : t("voice.listening")}
         </p>
         {live && (
           <button
@@ -220,40 +229,40 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
               paused ? "border-primary bg-primary text-white hover:bg-primary-dark" : "border-primary text-primary hover:bg-primary-tint"
             }`}
           >
-            {paused ? "Resume" : "Pause"}
+            {paused ? t("common.resume") : t("common.pause")}
           </button>
         )}
       </div>
 
       {lines.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs text-muted">Tap anything you said to fix it if we heard it wrong.</p>
+          <p className="text-xs text-muted">{t("voice.tapToFix")}</p>
           <ol className="max-h-72 space-y-2 overflow-y-auto rounded-lg bg-background p-3 text-sm" aria-label="Transcript">
             {lines.map((l, i) =>
               editing?.index === i ? (
-                <li key={i} className="space-y-2 text-right">
+                <li key={i} className="space-y-2 text-end">
                   <textarea
                     autoFocus
                     value={editing.text}
                     onChange={(e) => setEditing({ index: i, text: e.target.value })}
                     rows={2}
-                    className="w-full rounded-lg border border-primary bg-surface p-2 text-left"
+                    className="w-full rounded-lg border border-primary bg-surface p-2 text-start"
                   />
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => setEditing(null)} className="rounded-md border border-border px-3 py-1 text-xs">Cancel</button>
-                    <button onClick={saveEdit} className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-dark">Save correction</button>
+                    <button onClick={() => setEditing(null)} className="rounded-md border border-border px-3 py-1 text-xs">{t("common.cancel")}</button>
+                    <button onClick={saveEdit} className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-white hover:bg-primary-dark">{t("voice.saveCorrection")}</button>
                   </div>
                 </li>
               ) : (
-                <li key={i} className={l.role === "tenant" ? "text-right" : ""}>
+                <li key={i} className={l.role === "tenant" ? "text-end" : ""}>
                   {l.role === "tenant" ? (
                     <button
                       onClick={() => setEditing({ index: i, text: l.text })}
-                      title="Edit what you said"
-                      className="inline-block rounded-lg bg-primary px-3 py-1.5 text-left text-white hover:bg-primary-dark"
+                      title={t("voice.editTitle")}
+                      className="inline-block rounded-lg bg-primary px-3 py-1.5 text-start text-white hover:bg-primary-dark"
                     >
                       {l.text}
-                      <span className="ml-2 text-xs text-white/80 underline">{l.heard ? "edited" : "edit"}</span>
+                      <span className="ms-2 text-xs text-white/80 underline">{l.heard ? t("voice.edited") : t("voice.edit")}</span>
                     </button>
                   ) : (
                     <span className="inline-block rounded-lg bg-surface px-3 py-1.5 text-ink">{l.text}</span>
@@ -267,21 +276,21 @@ function VoiceInner({ onFallback }: { onFallback?: () => void }) {
 
       {caseId && (
         <div className="space-y-1 rounded-lg border-2 border-primary bg-primary-tint p-3 text-center text-sm">
-          <p className="font-medium">Your repair is logged{saved === "saved" ? " and the call transcript is saved as evidence" : ""}.</p>
+          <p className="font-medium">{saved === "saved" ? t("voice.loggedSaved") : t("voice.logged")}</p>
           {saved === "stale" && (
             <button onClick={() => saveTranscript("Voice report transcript (corrected by tenant)")} className="font-medium text-primary underline">
-              Save my corrections to the case
+              {t("voice.saveCorrections")}
             </button>
           )}
-          <Link href={`/tenant/cases/${caseId}`} className="block font-medium text-primary underline">See your landlord&apos;s deadline</Link>
+          <Link href={`/tenant/cases/${caseId}`} className="block font-medium text-primary underline">{t("voice.seeDeadline")}</Link>
         </div>
       )}
 
       {error && (
         <div className="space-y-2 text-center text-sm">
-          <p className="text-danger">{error}</p>
+          <p className="text-danger">{error === CALL_ENDED ? t("voice.callEnded") : error}</p>
           {onFallback && (
-            <button onClick={onFallback} className="font-medium text-primary underline">Type your report instead</button>
+            <button onClick={onFallback} className="font-medium text-primary underline">{t("voice.typeInstead")}</button>
           )}
         </div>
       )}

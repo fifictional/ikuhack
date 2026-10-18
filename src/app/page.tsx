@@ -1,5 +1,6 @@
-import Link from "next/link";
-import { LogoMark } from "@/components/brand/Logo";
+import { HeroLogo } from "@/components/brand/HeroLogo";
+import { LogoWalkthrough } from "@/components/brand/LogoWalkthrough";
+import { WalkThroughLink } from "@/components/brand/WalkThroughLink";
 import { T } from "@/components/i18n/I18n";
 
 export default function Home() {
@@ -13,23 +14,25 @@ export default function Home() {
           <p className="max-w-xl text-lg text-ink/80">
             <T k="home.intro" />
           </p>
-          <Link href="/tenant/report" className="inline-block rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-dark">
+          <WalkThroughLink href="/tenant/report" className="inline-block rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary-dark">
             <T k="home.cta" />
-          </Link>
+          </WalkThroughLink>
         </div>
-        <LogoMark size={120} className="shrink-0" />
+        <HeroLogo size={120} className="shrink-0" />
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link href="/tenant" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
+        <WalkThroughLink href="/tenant" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
           <h2 className="text-lg font-bold group-hover:text-primary"><T k="home.tenantTitle" /></h2>
           <p className="mt-1 text-sm text-muted"><T k="home.tenantBody" /></p>
-        </Link>
-        <Link href="/landlord" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
+        </WalkThroughLink>
+        <WalkThroughLink href="/landlord" className="group rounded-xl border border-border bg-surface p-6 hover:border-primary">
           <h2 className="text-lg font-bold group-hover:text-primary"><T k="home.landlordTitle" /></h2>
           <p className="mt-1 text-sm text-muted"><T k="home.landlordBody" /></p>
-        </Link>
+        </WalkThroughLink>
       </div>
+
+      <LogoWalkthrough />
     </div>
   );
 }

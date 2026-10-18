@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { Logo } from "@/components/brand/Logo";
+import { LawCheckFooter } from "@/components/LawCheckFooter";
 import { RoleNavLink, SessionNav } from "@/components/SessionNav";
 import { I18nProvider, LanguageSwitcher, T } from "@/components/i18n/I18n";
 import "./globals.css";
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <I18nProvider>
         <header className="border-b border-border bg-background">
           <nav className="mx-auto flex max-w-5xl items-center gap-x-4 px-4 py-3 text-sm sm:gap-x-6">
-            <Link href="/" aria-label="Docket home" className="mr-2">
+            <Link href="/" aria-label="Docket home" className="me-2">
               <Logo size={24} />
             </Link>
             {/* Both read the session cookie, so each needs its own boundary to keep the header static. */}
@@ -44,7 +45,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </div>
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</main>
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 pb-16">{children}</main>
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background">
+          {/* Reads the DB, so it streams in behind a boundary on every page. */}
+          <Suspense fallback={null}>
+            <LawCheckFooter />
+          </Suspense>
+        </footer>
         </I18nProvider>
       </body>
     </html>

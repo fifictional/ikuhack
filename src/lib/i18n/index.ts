@@ -53,6 +53,16 @@ export function plainDutyIn(locale: Locale, o: Obligation, landlordName: string)
     : translate(locale, "duty.landlordMust", { landlord: landlordName, action });
 }
 
+/** Badge for a duty's type (mirrors dutyType() in lib/ui/labels.ts). */
+export function dutyTypeIn(locale: Locale, o: Obligation): { text: string; tone: "dark" | "light" } {
+  if (!o.legalBasis.statutory) return { text: translate(locale, "dutyType.target"), tone: "light" };
+  if (o.legalBasis.deadline === "law") {
+    const awaab = o.legalBasis.citation.includes("Awaab");
+    return { text: translate(locale, awaab ? "dutyType.lawAwaab" : "deadline.law"), tone: "dark" };
+  }
+  return { text: translate(locale, "dutyType.reasonable"), tone: "dark" };
+}
+
 /** Deadline wording; only fixed periods in law are called legal deadlines. */
 export function deadlineLabelIn(locale: Locale, o: Obligation): string {
   if (!o.legalBasis.statutory) return translate(locale, "deadline.docket");

@@ -4,9 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * The "walk through the door" transition on the homepage. A link calls playLogoWalkthrough(href).
- * The sequence: the page softly dims, the view zooms into the real hero logo, its door slides
- * open, the black pours out of the door to cover the screen, then the page reloads to the target
- * URL. A full reload means the new page renders fresh — nothing from the transition can linger.
+ * The sequence: the page softly dims, the view moves into the real hero logo, its door slides open,
+ * the black grows out of the doorway to cover the screen, then the page reloads to the target URL.
+ *
+ * Two things keep it smooth rather than stepped:
+ *  - each phase starts just before the last one finishes, so the move is continuous;
+ *  - every animated element is promoted to its own layer up front, so the first frame doesn't hitch.
  */
 
 type DoorScene = { box: HTMLDivElement; doorway: SVGRectElement; left: SVGRectElement; right: SVGRectElement };
@@ -25,7 +28,9 @@ export function playLogoWalkthrough(href: string): void {
   play?.(href);
 }
 
-const ZOOM = 2.5;
+const ZOOM = 2.4;
+/** One gentle, slightly decelerating curve for every phase, so the whole move feels of a piece. */
+const EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 export function LogoWalkthrough() {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -58,67 +63,76 @@ export function LogoWalkthrough() {
     const timers: number[] = [];
     const later = (ms: number, fn: () => void) => timers.push(window.setTimeout(fn, ms));
 
-    // 1. Softly dim the page so the change doesn't come out of the blue.
-    dim.animate([{ opacity: 0 }, { opacity: 0.45 }], { duration: 400, easing: "ease-out", fill: "forwards" });
+    // Promote to their own layers before touching them, so the first animated frame is smooth.
+    dim.style.willChange = "opacity";
+    portal.style.willChange = "transform";
 
-    // 2. Zoom the view into the real hero logo: scale it up and carry it to the centre of the screen.
+    // 1. The page dims gently, so the change is announced rather than sudden.
+    dim.animate([{ opacity: 0 }, { opacity: 0.4 }], { duration: 500, easing: EASE, fill: "forwards" });
+
+    // 2. The view moves into the real hero logo, easing to a stop instead of snapping to one.
     if (scene) {
       const box = scene.box;
+      box.style.position = "relative";
+      box.style.zIndex = "40";
+      box.style.willChange = "transform";
       const r = box.getBoundingClientRect();
       if (r.width > 0 && r.height > 0) {
         const dx = window.innerWidth / 2 - (r.left + r.width / 2);
         const dy = window.innerHeight / 2 - (r.top + r.height / 2);
-        box.style.position = "relative";
-        box.style.zIndex = "40";
         box.animate(
           [
-            { transform: "translate(0px, 0px) scale(1)" },
-            { transform: `translate(${dx}px, ${dy}px) scale(${ZOOM})` },
+            { transform: "translate3d(0, 0, 0) scale(1)" },
+            { transform: `translate3d(${dx}px, ${dy}px, 0) scale(${ZOOM})` },
           ],
-          { duration: 500, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" },
+          { duration: 700, easing: EASE, fill: "forwards" },
         );
       }
     }
 
-    // 3. Once the zoom lands, slide the door open (its size is measured after the zoom).
-    later(520, () => {
+    // 3. The door starts opening while the zoom is still settling, so there is no dead beat.
+    later(400, () => {
       if (!scene) return;
       const r = scene.doorway.getBoundingClientRect();
       if (!(r.width > 0 && r.height > 0)) return;
       const half = r.width / 2;
       scene.left.animate([{ transform: "translateX(0)" }, { transform: `translateX(${-half}px)` }], {
-        duration: 420,
-        easing: "ease-out",
+        duration: 520,
+        easing: EASE,
         fill: "forwards",
       });
       scene.right.animate([{ transform: "translateX(0)" }, { transform: `translateX(${half}px)` }], {
-        duration: 420,
-        easing: "ease-out",
+        duration: 520,
+        easing: EASE,
         fill: "forwards",
       });
     });
 
-    // 4. The black pours out of the (now open, zoomed) door.
-    later(760, () => {
+    // 4. Black grows out of the doorway itself: it starts as the door-sized opening and eases
+    //    outward until it covers the screen, rather than popping out of a single point.
+    later(720, () => {
       const r = scene?.doorway.getBoundingClientRect();
+      const doorW = r && r.width > 0 ? r.width : 24;
+      const doorH = r && r.height > 0 ? r.height : 32;
       const cx = r ? r.left + r.width / 2 : window.innerWidth / 2;
       const cy = r ? r.top + r.height / 2 : window.innerHeight / 2;
-      const size = Math.hypot(window.innerWidth, window.innerHeight) * 2;
-      portal.style.width = `${size}px`;
-      portal.style.height = `${size}px`;
+      // How far the doorway must grow before its shorter side spans the whole screen.
+      const cover = (Math.hypot(window.innerWidth, window.innerHeight) * 2) / Math.min(doorW, doorH);
+      portal.style.width = `${doorW}px`;
+      portal.style.height = `${doorH}px`;
       portal.style.left = `${cx}px`;
       portal.style.top = `${cy}px`;
       portal.animate(
         [
-          { transform: "translate(-50%, -50%) scale(0)" },
-          { transform: "translate(-50%, -50%) scale(1)" },
+          { transform: "translate3d(-50%, -50%, 0) scale(1)" },
+          { transform: `translate3d(-50%, -50%, 0) scale(${cover})` },
         ],
-        { duration: 450, easing: "ease-in-out", fill: "forwards" },
+        { duration: 680, easing: EASE, fill: "forwards" },
       );
     });
 
-    // 5. Full page load: the new page renders from scratch, nothing lingers.
-    later(1250, () => window.location.assign(href));
+    // 5. Hold on the black for a beat, then load the new page fresh.
+    later(1520, () => window.location.assign(href));
 
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [href]);
@@ -129,7 +143,7 @@ export function LogoWalkthrough() {
       <div
         ref={portalRef}
         className="absolute bg-primary-dark"
-        style={{ width: 0, height: 0, opacity: 1, transform: "translate(-50%, -50%) scale(0)" }}
+        style={{ width: 0, height: 0, opacity: 1, transformOrigin: "center", transform: "translate3d(-50%, -50%, 0) scale(1)" }}
       />
     </div>
   );
